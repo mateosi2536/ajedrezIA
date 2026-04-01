@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajedrez Analítico IA | Evolución Gemini</title>
+
+    <!-- Librerías Externas CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cm-chessboard@8.5.0/assets/chessboard.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap">
+
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --accent-w: #ffffff;
+            --accent-b: #3b82f6;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 40%), #020617;
+            z-index: -1;
+        }
+
+        .container {
+            width: 96vw;
+            height: 94vh;
+            max-width: 1600px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 2.5rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- PANTALLA SETUP --- */
+        #setup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.98);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .setup-card {
+            background: #1e293b;
+            padding: 2.5rem;
+            border-radius: 24px;
+            text-align: center;
+            width: 550px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            background: linear-gradient(to right, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        .setup-group label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #0f172a;
+            color: white;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+
+        /* --- INTERFAZ JUEGO --- */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .player-info {
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .player-tag {
+            font-size: 0.55rem;
+            color: var(--text-dim);
+        }
+
+        .status-playing {
+            font-size: 0.8rem;
+            color: #10b981;
+        }
+
+        .status-paused {
+            font-size: 0.8rem;
+            color: #f59e0b;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .token-badge {
+            font-size: 0.65rem;
+            color: #fbbf24;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .player-score {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .player-name {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .reasoning-box {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .reasoning-header {
+            padding: 0.8rem 1rem;
+            background: rgba(30, 41, 59, 0.8);
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .logs {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            min-height: 0;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+
+        .log-item {
+            background: rgba(30, 41, 59, 0.4);
+            padding: 0.8rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .log-move {
+            font-weight: 700;
+        }
+
+        .log-text {
+            font-style: italic;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        /* Centro */
+        .center-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: min(65vh, 700px);
+            gap: 1.5rem;
+            height: 100%;
+        }
+
+        .board-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #my-board {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            border: 3px solid #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: #0f172a;
+        }
+
+        .advantage-bar-container {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            position: relative;
+        }
+
+        #advantage-bar {
+            height: 100%;
+            width: 50%;
+            background: var(--accent-b);
+            transition: width 0.8s ease-out;
+        }
+
+        .game-metrics {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 0.6rem;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .metric-card:hover {
+            background: rgba(51, 65, 85, 0.8);
+            transform: translateY(-1px);
+        }
+
+        .metric-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .metric-label {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+
+    <!-- PANTALLA SETUP -->
+    <div id="setup-overlay">
+        <div class="setup-card">
+            <h1>Ajedrez Analítico</h1>
+            <p style="color: var(--text-dim); margin-bottom: 2rem;">Configura tus Motores Gemini 3.1 Pro</p>
+
+            <input type="password" id="api-key" placeholder="Pega tu API Key aquí..." />
+
+            <div class="setup-grid" style="grid-template-columns:1fr 1fr; margin-bottom: 15px;">
+                <div class="setup-group">
+                    <label>Modo de Juego</label>
+                    <select id="game-mode" onchange="toggleModo()">
+                        <option value="cpu-cpu">CPU vs CPU</option>
+                        <option value="jugador-cpu">Jugador vs CPU</option>
+                    </select>
+                </div>
+                <div class="setup-group" id="player-color-group" style="display:none;">
+                    <label>Juegas con</label>
+                    <select id="player-color">
+                        <option value="w">Blancas</option>
+                        <option value="b">Negras</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="setup-grid">
+                <!-- Blancas -->
+                <div class="setup-group" id="white-config">
+                    <label>Modelo Blancas</label>
+                    <select id="white-model">
+                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                        <option value="gemini-3.1-flash-lite-preview" selected>Gemini 3.1 Flash Lite</option>
+                        <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
+                    </select>
+                    <label>Razonamiento (Blancas)</label>
+                    <select id="white-think">
+                        <option value="MINIMAL">MÍNIMO</option>
+                        <option value="LOW">BAJO</option>
+                        <option value="MEDIUM" selected>MEDIO</option>
+                        <option value="HIGH">ALTO</option>
+                    </select>
+                </div>
+
+                <!-- Negras -->
+                <div class="setup-group" id="black-config">
+                    <label>Modelo Negras</label>
+                    <select id="black-model">
+                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                        <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
+                        <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
+                    </select>
+                    <label>Razonamiento (Negras)</label>
+                    <select id="black-think">
+                        <option value="MINIMAL">MÍNIMO</option>
+                        <option value="LOW">BAJO</option>
+                        <option value="MEDIUM" selected>MEDIO</option>
+                        <option value="HIGH">ALTO</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="start-btn">Comenzar Duelo</button>
+        </div>
+    </div>
+
+    <!-- INTERFAZ PRINCIPAL -->
+    <div class="container hidden" id="main-ui">
+
+        <!-- Blancas -->
+        <div class="side-panel">
+            <div class="player-info white">
+                <div class="player-header">
+                    <div>
+                        <span class="player-name">Blancas (CPU)</span>
+                        <div id="w-tag" class="player-tag"></div>
+                    </div>
+                    <span class="player-score" id="score-w">0</span>
+                </div>
+                <div class="token-badge" id="token-w">Tokens: 0</div>
+            </div>
+            <div class="reasoning-box">
+                <div class="reasoning-header">Traza Mental [B]</div>
+                <div class="logs" id="logs-w"></div>
+            </div>
+        </div>
+
+        <!-- Tablero -->
+        <div class="center-section">
+            <div class="board-wrapper">
+                <div id="my-board"></div>
+            </div>
+            <div class="advantage-bar-container">
+                <div id="advantage-bar"></div>
+            </div>
+            <div class="game-metrics">
+                <div class="metric-card">
+                    <span class="metric-val" id="turn-count">1</span>
+                    <span class="metric-label">Turno</span>
+                </div>
+                <div class="metric-card" id="status-card">
+                    <span class="metric-val status-playing" id="game-status">En Juego</span>
+                    <span class="metric-label">Estado</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-val" id="material-diff">0</span>
+                    <span class="metric-label">Puntos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Negras -->
+        <div class="side-panel">
+            <div class="player-info black">
+                <div class="player-header">
+                    <div>
+                        <span class="player-name">Negras (CPU)</span>
+                        <div id="b-tag" class="player-tag"></div>
+                    </div>
+                    <span class="player-score" id="score-b">0</span>
+                </div>
+                <div class="token-badge" id="token-b">Tokens: 0</div>
+            </div>
+            <div class="reasoning-box">
+                <div class="reasoning-header">Traza Mental [N]</div>
+                <div class="logs" id="logs-b"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script>
+        function toggleModo() {
+            const esJugador = document.getElementById('game-mode').value === 'jugador-cpu';
+            document.getElementById('player-color-group').style.display = esJugador ? 'block' : 'none';
+            document.getElementById('white-config').style.display = (esJugador && document.getElementById('player-color').value === 'w') ? 'none' : 'block';
+            document.getElementById('black-config').style.display = (esJugador && document.getElementById('player-color').value === 'b') ? 'none' : 'block';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('player-color').addEventListener('change', toggleModo);
+        });
+    </script>
+    <script type="module">
+        import { Chessboard, FEN, INPUT_EVENT_TYPE, COLOR } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/Chessboard.js";
+        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+        let game = new Chess();
+        let board = null;
+        let genAI = null;
+        let isPaused = false;
+        let tokenUsage = { w: 0, b: 0 };
+
+        const config = {
+            apiKey: "",
+            modo: "cpu-cpu",
+            playerColor: "w",
+            w: { model: "", think: "" },
+            b: { model: "", think: "" }
+        };
+
+        const ui = {
+            setup: document.getElementById('setup-overlay'),
+            main: document.getElementById('main-ui'),
+            logsW: document.getElementById('logs-w'), logsB: document.getElementById('logs-b'),
+            scoreW: document.getElementById('score-w'), scoreB: document.getElementById('score-b'),
+            materialDiff: document.getElementById('material-diff'),
+            advantageBar: document.getElementById('advantage-bar'),
+            turnCount: document.getElementById('turn-count'),
+            gameStatus: document.getElementById('game-status')
+        };
+
+        document.getElementById('start-btn').onclick = () => {
+            config.apiKey = document.getElementById('api-key').value.trim();
+            if (!config.apiKey) return alert("Falta API Key");
+
+            genAI = new GoogleGenerativeAI(config.apiKey);
+            config.modo = document.getElementById('game-mode').value;
+            config.playerColor = document.getElementById('player-color').value;
+            config.w.model = document.getElementById('white-model').value;
+            config.w.think = document.getElementById('white-think').value;
+            config.b.model = document.getElementById('black-model').value;
+            config.b.think = document.getElementById('black-think').value;
+
+            const esJugador = config.modo === 'jugador-cpu';
+            const nombreW = esJugador && config.playerColor === 'w' ? 'Tú' : config.w.model;
+            const nombreB = esJugador && config.playerColor === 'b' ? 'Tú' : config.b.model;
+            document.querySelector('.player-info.white .player-name').innerText = esJugador && config.playerColor === 'w' ? 'Tú (Blancas)' : 'Blancas (CPU)';
+            document.querySelector('.player-info.black .player-name').innerText = esJugador && config.playerColor === 'b' ? 'Tú (Negras)' : 'Negras (CPU)';
+            document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : `${config.w.model} (${config.w.think})`;
+            document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : `${config.b.model} (${config.b.think})`;
+
+            ui.setup.style.display = "none";
+            ui.main.classList.remove('hidden');
+            initGame();
+        };
+
+        document.getElementById('status-card').onclick = () => {
+            isPaused = !isPaused;
+            ui.gameStatus.innerText = isPaused ? "Pausado" : "En Juego";
+            ui.gameStatus.className = `metric-val ${isPaused ? 'status-paused' : 'status-playing'}`;
+            if (!isPaused) triggerAI();
+        };
+
+        function initGame() {
+            board = new Chessboard(document.getElementById("my-board"), {
+                position: FEN.start,
+                assetsUrl: "https://cdn.jsdelivr.net/npm/cm-chessboard@8/assets/",
+                style: { cssClass: "default", pieces: { type: "svgSprite", file: "pieces/standard.svg", tileSize: 40 } }
+            });
+            updateMetrics();
+            // Si el jugador juega con blancas, empieza con su turno
+            if (config.modo === 'jugador-cpu' && config.playerColor === 'w') {
+                habilitarInputJugador();
+            } else {
+                triggerAI();
+            }
+        }
+
+        function habilitarInputJugador() {
+            if (isPaused || game.game_over()) return;
+            const colorBoard = config.playerColor === 'w' ? COLOR.white : COLOR.black;
+            ui.gameStatus.innerText = "Tu turno";
+            ui.gameStatus.className = "metric-val status-playing";
+            board.enableMoveInput((event) => {
+                if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+                    return true;
+                }
+                if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
+                    const move = game.move({ from: event.squareFrom, to: event.squareTo, promotion: 'q' });
+                    if (move) {
+                        board.setPosition(game.fen(), true);
+                        updateMetrics();
+                        const isW = config.playerColor === 'w';
+                        logReasoning(isW, "Movimiento del jugador.", move.san);
+                        board.disableMoveInput();
+                        ui.gameStatus.innerText = "CPU";
+                        ui.gameStatus.className = "metric-val status-paused";
+                        setTimeout(() => triggerAI(), 800);
+                        return true;
+                    }
+                    return false;
+                }
+            }, colorBoard);
+        }
+
+        async function triggerAI(movInvalido = null) {
+            if (isPaused || game.game_over()) return handleGameOver();
+            // Si es el turno del jugador, habilitar input en lugar de llamar a la IA
+            if (config.modo === 'jugador-cpu' && game.turn() === config.playerColor) {
+                habilitarInputJugador();
+                return;
+            }
+            const isW = game.turn() === 'w';
+            const settings = isW ? config.w : config.b;
+
+            const model = genAI.getGenerativeModel({
+                model: settings.model,
+                generationConfig: {
+                    thinkingConfig: {
+                        thinkingLevel: settings.think
+                    }
+                }
+            });
+
+            try {
+                const hist = game.history();
+                const ultimosMovs = hist.slice(-6).join(" ");
+                const infoHist = ultimosMovs ? `Últimos movimientos: ${ultimosMovs}.` : "Inicio del juego.";
+                const color = isW ? "Blancas" : "Negras";
+
+                const advertencia = movInvalido
+                    ? `\nADVERTENCIA: tu movimiento anterior "${movInvalido}" no es válido. Elige otro movimiento legal.`
+                    : "";
+                const prompt = `Eres un Gran Maestro de ajedrez jugando con ${color}.
+FEN actual: ${game.fen()}
+${infoHist}
+
+Analiza la posición siguiendo estos criterios:
+1. Detecta amenazas inmediatas: jaques, capturas colgadas, mates en pocas jugadas.
+2. Anticipa las mejores respuestas del rival a tu movimiento.
+3. Evalúa: control del centro, seguridad del rey, estructura de peones, actividad de piezas.
+4. Elige el movimiento que maximice tu ventaja.
+
+Escribe el movimiento elegido en notación algebraica inglesa (N=caballo, B=alfil, Q=dama, R=torre, K=rey) entre dobles llaves: {{movimiento}}.${advertencia}`;
+                const result = await model.generateContent(prompt);
+
+                const usage = result.response.usageMetadata;
+                if (usage && usage.totalTokenCount) {
+                    const side = isW ? 'w' : 'b';
+                    tokenUsage[side] += usage.totalTokenCount;
+                    document.getElementById(`token-${side}`).innerText = `Tokens: ${tokenUsage[side].toLocaleString()}`;
+                }
+
+                const text = result.response.text();
+                const moveMatch = text.match(/\{\{([^\}]+)\}\}/);
+                const moveStr = moveMatch ? moveMatch[1].trim() : "";
+
+                if (game.move(moveStr, { sloppy: true })) {
+                    logReasoning(isW, text.replace(/\{\{.*?\}\}/g, ""), moveStr);
+                    await board.setPosition(game.fen(), true);
+                    updateMetrics();
+                    setTimeout(() => triggerAI(), 1000);
+                } else {
+                    setTimeout(() => triggerAI(moveStr || "desconocido"), 1500);
+                }
+            } catch (e) { setTimeout(() => triggerAI(), 3000); }
+        }
+
+        function updateMetrics() {
+            const vals = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+            let sumW = 0, sumB = 0;
+            game.board().flat().filter(p => p).forEach(p => {
+                if (p.color === 'w') sumW += vals[p.type];
+                else sumB += vals[p.type];
+            });
+            ui.scoreW.innerText = sumW; ui.scoreB.innerText = sumB;
+            const diff = sumW - sumB;
+            ui.materialDiff.innerText = (diff > 0 ? "+" : "") + diff;
+            ui.turnCount.innerText = Math.floor(game.history().length / 2) + 1;
+            const total = sumW + sumB;
+            ui.advantageBar.style.width = (total === 0 ? 50 : (sumB / total) * 100) + "%";
+        }
+
+        function logReasoning(isW, text, move, raw = null) {
+            const entry = document.createElement('div');
+            entry.className = `log-item ${isW ? 'white' : 'black'}`;
+            let html = `<div class="log-move">${move}</div><div class="log-text">${text}</div>`;
+            if (raw) {
+                const escapedRaw = raw.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                html += `<details style="margin-top: 10px; font-size: 0.75rem; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px;">
+                            <summary style="cursor:pointer; color: #f59e0b; font-weight: 600;">Ver respuesta cruda (Depuración)</summary>
+                            <pre style="white-space: pre-wrap; margin-top: 5px; font-family: inherit;">${escapedRaw}</pre>
+                         </details>`;
+            }
+            entry.innerHTML = html;
+            (isW ? ui.logsW : ui.logsB).prepend(entry);
+        }
+
+        function handleGameOver() {
+            if (game.game_over()) ui.gameStatus.innerText = "Fin";
+        }
+    </script>
+</body>
+
+</html>
