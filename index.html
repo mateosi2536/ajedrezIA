@@ -132,6 +132,10 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
+        .alert-item + .alert-item {
+            margin-top: 1rem;
+        }
+
         .alert-item b {
             color: var(--text);
             display: block;
@@ -527,6 +531,7 @@
                 opacity: 0;
                 transform: translateY(-20px) scale(0.98);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -805,7 +810,7 @@
                     Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún
                     servidor externo.
                 </div>
-                <div class="alert-item" style="margin-top: 1rem;">
+                <div class="alert-item">
                     <b>Control de Gastos</b>
                     Se recomienda fijar un límite de uso en tu consola de Google Cloud para evitar que bucles infinitos
                     en el razonamiento generen costes inesperados.
@@ -819,14 +824,16 @@
                     El uso de modelos LLM directamente en el navegador (WebLLM) es una tecnología en desarrollo. La
                     eficiencia será menor que la de modelos nativos.
                 </div>
-                <div class="alert-item" style="margin-top: 1rem;">
+                <div class="alert-item">
                     <b>Complejidad del Ajedrez</b>
                     Jugar ajedrez es una tarea compleja para un LLM pequeño. Los modelos menos inteligentes podrían
                     realizar movimientos ilegales o incoherentes.
                 </div>
-                <div id="alerts-local-optim" class="alert-item" style="margin-top: 1rem; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); display: none;">
+                <div id="alerts-local-optim" class="alert-item" style="display: none;">
                     <b>Optimización de Recursos</b>
-                    Se recomienda usar el mismo modelo para ambos jugadores. Esto permitirá que tu sistema reutilice la misma instancia cargada en memoria, reduciendo el consumo de RAM/VRAM y mejorando drásticamente el rendimiento del duelo.
+                    Se recomienda usar el mismo modelo para ambos jugadores. Esto permitirá que tu sistema reutilice la
+                    misma instancia cargada en memoria, reduciendo el consumo de RAM/VRAM y mejorando drásticamente el
+                    rendimiento del duelo.
                 </div>
             </div>
 
@@ -836,18 +843,19 @@
                     <b>Servicio Local Requerido</b>
                     Asegúrate de que Ollama esté ejecutándose en tu PC antes de intentar conectar.
                 </div>
-                <div class="alert-item" style="margin-top: 1rem;">
+                <div class="alert-item">
                     <b>Configuración de Acceso (CORS)</b>
                     Para permitir la conexión, configura esta variable de entorno y reinicia Ollama:
                     <div class="code-block">OLLAMA_ORIGINS=https://mateosi2536.github.io</div>
                 </div>
-                <div id="alerts-ollama-optim" class="alert-item" style="margin-top: 1rem; border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); display: none;">
+                <div id="alerts-ollama-optim" class="alert-item" style="display: none;">
                     <b>Duelo Optimizado</b>
-                    Para un rendimiento óptimo, selecciona el mismo modelo de Ollama para blancas y negras. De este modo, el servidor no tendrá que intercambiar modelos en memoria en cada turno ("model swapping"), lo que hará la partida mucho más fluida.
+                    Para un rendimiento óptimo, selecciona el mismo modelo de Ollama para blancas y negras. De este
+                    modo, el servidor no tendrá que intercambiar modelos en memoria en cada turno ("model swapping"), lo
+                    que hará la partida mucho más fluida.
                 </div>
-                <div id="ollama-error-alert" class="alert-item"
-                    style="margin-top: 1rem; display: none; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);">
-                    <b style="color: #ef4444;">Error de Conexión</b>
+                <div id="ollama-error-alert" class="alert-item" style="display: none;">
+                    <b>Error de Conexión</b>
                     No se puede contactar con Ollama. Verifica que el servidor esté activo y que la variable CORS sea
                     correcta.
                 </div>
@@ -1103,7 +1111,7 @@
             const esJugador = !esCpuVsCpu;
             const prov = document.getElementById('ai-provider').value;
             const playerColor = document.getElementById('player-color').value;
-            
+
             // Gestionar visibilidad de alertas de optimización (solo CPU vs CPU)
             document.getElementById('alerts-local-optim').style.display = esCpuVsCpu ? 'block' : 'none';
             document.getElementById('alerts-ollama-optim').style.display = esCpuVsCpu ? 'block' : 'none';
