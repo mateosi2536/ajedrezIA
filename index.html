@@ -1458,7 +1458,8 @@
                 model: settings.model,
                 generationConfig: {
                     thinkingConfig: {
-                        thinkingLevel: settings.think
+                        includeThoughts: true,
+                        thinkingLevel: settings.think // Usar el nivel seleccionado (LOW, MEDIUM, HIGH, etc)
                     }
                 }
             });
@@ -1480,29 +1481,30 @@
             const liveTextElG = liveEntry.querySelector('.log-text');
 
             try {
-                const prompt = `Eres un Gran Maestro de ajedrez jugando con ${color}.
-FEN actual: ${game.fen()}
-${infoHist}
+                const sideConf = isW ? config.w : config.b;
+                const legalMoves = game.moves();
+                const ejemplo = legalMoves[0];
+                const messages = [
+                    { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
+                    { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
+                ];
 
-Analiza la posición siguiendo estos criterios:
-1. Detecta amenazas inmediatas: jaques, capturas colgadas, mates en pocas jugadas.
-2. Anticipa las mejores respuestas del rival a tu movimiento.
-3. Evalúa: control del centro, seguridad del rey, estructura de peones, actividad de piezas.
-4. Elige el movimiento que maximice tu ventaja.
-
-Escribe el movimiento elegido en notación algebraica inglesa (N=caballo, B=alfil, Q=dama, R=torre, K=rey) entre dobles llaves: {{movimiento}}.${advertencia}`;
-
+                const prompt = messages.map(m => `${m.role === 'system' ? 'SYSTEM' : 'USER'}: ${m.content}`).join('\n'); // Unificado a string para simplificar
                 const result = await model.generateContentStream(prompt);
                 let thinkContent = '', responseText = '';
 
                 for await (const chunk of result.stream) {
-                    for (const part of chunk.candidates?.[0]?.content?.parts || []) {
+                    const parts = chunk.candidates?.[0]?.content?.parts || [];
+                    for (const part of parts) {
+                        // Detectar razonamiento nativo de Gemini
                         if (part.thought) {
                             thinkContent += part.text || '';
                             liveThinkDetG.style.display = '';
                             liveThinkElG.textContent = thinkContent + '▌';
-                        } else {
-                            responseText += part.text || '';
+                        } 
+                        // Detectar texto de respuesta
+                        else if (part.text) {
+                            responseText += part.text;
                             liveTextElG.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
                         }
                     }
