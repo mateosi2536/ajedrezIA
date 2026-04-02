@@ -1271,6 +1271,15 @@
             }
         }
 
+        function logReasoning(isW, thought, move) {
+            const entry = document.createElement('div');
+            entry.className = `log-item ${isW ? 'white' : 'black'}`;
+            entry.innerHTML = `
+                <div class="log-move">${move}</div>
+                <div class="log-text">${thought}</div>`;
+            (isW ? ui.logsW : ui.logsB).prepend(entry);
+        }
+
         function habilitarInputJugador() {
             if (isPaused || game.game_over()) return;
             const colorBoard = config.playerColor === 'w' ? COLOR.white : COLOR.black;
