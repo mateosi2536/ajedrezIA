@@ -96,8 +96,8 @@
             position: relative;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Altura fija necesaria para que la transición CSS funcione (no se puede animar height:auto) */
             height: 652.6px;
-            /* 571 + 80 + 1.6 */
         }
 
         /* --- PANEL DE INFO (Simplificado) --- */
@@ -154,12 +154,12 @@
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateX(20px);
+                transform: translateX(30px) scale(0.95);
             }
 
             to {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateX(0) scale(1);
             }
         }
 
@@ -186,28 +186,15 @@
         }
 
         input {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            background: rgba(15, 23, 42, 0.8);
-            color: var(--text);
-            font-family: inherit;
-            transition: all 0.3s ease;
+            width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 12px;
+            border: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.8);
+            color: var(--text); font-family: inherit; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1; outline: none;
         }
+        input:hover { background: rgba(30, 41, 59, 0.7); border-color: rgba(255, 255, 255, 0.2); }
+        input:focus { border-color: var(--accent-b); background: rgba(30, 41, 59, 1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
 
-        input:focus {
-            border-color: var(--accent-b);
-            background: rgba(30, 41, 59, 1);
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
-        }
-
-        /* --- PREVENIR FONDO BLANCO EN AUTOCOMPLETE --- */
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover,
-        input:-webkit-autofill:focus,
-        input:-webkit-autofill:active {
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active {
             -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
             -webkit-text-fill-color: var(--text) !important;
             transition: background-color 5000s ease-in-out 0s;
@@ -536,7 +523,7 @@
             cursor: pointer;
             padding: 4px 8px;
             font-size: 0.7rem;
-            color: #f59e0b;
+            color: var(--text-dim);
             font-weight: 600;
             list-style: none;
             user-select: none;
@@ -728,14 +715,14 @@
                 <label
                     style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL
                     de Ollama</label>
-                <div style="display: flex; gap: 12px; align-items: center; margin-bottom:8px;">
+                <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <input type="text" id="ollama-url" value="http://localhost:11434"
-                        placeholder="http://localhost:11434" style="margin-bottom:0; flex: 1;" />
+                        placeholder="http://localhost:11434" style="margin-bottom: 0;" />
                     <div id="ollama-status"
-                        style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: right;">
+                        style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: center;">
                     </div>
                 </div>
-                <div id="ollama-model-group" style="display:none;">
+                <div id="ollama-model-group">
                     <div class="setup-grid">
                         <div class="setup-group" id="ollama-white-config">
                             <label>Modelo Blancas</label>
@@ -907,10 +894,11 @@
             const card = document.querySelector('.setup-card');
             const infoPanel = document.getElementById('info-panel');
 
+            // Alturas precalculadas para cada proveedor para permitir transiciones suaves
             let height = '652.6px';
             if (val === 'gemini') height = '652.6px';
             else if (val === 'local') height = '551.6px';
-            else if (val === 'ollama') height = '620.2px';
+            else if (val === 'ollama') height = '652.6px';
 
             card.style.height = height;
             infoPanel.style.height = height;
@@ -922,43 +910,56 @@
         let ollamaFetchTimer = null;
         async function fetchOllamaModels() {
             const statusEl = document.getElementById('ollama-status');
-            const modelGroup = document.getElementById('ollama-model-group');
             const url = document.getElementById('ollama-url').value.trim().replace(/\/$/, '');
-
+            const whiteSelect = document.getElementById('ollama-white-model');
+            const blackSelect = document.getElementById('ollama-black-model');
+            
+            // Estado inicial de "cargando" / "sin conexión"
             statusEl.style.color = 'var(--text-dim)';
             statusEl.innerText = 'CONECTANDO...';
-            modelGroup.style.display = 'none';
+            whiteSelect.innerHTML = '<option value="">---------</option>';
+            blackSelect.innerHTML = '<option value="">---------</option>';
+            document.getElementById('ollama-error-alert').style.display = 'none';
+
             try {
                 const resp = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(4000) });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
+                
                 statusEl.textContent = 'CONECTADO';
                 statusEl.style.color = 'var(--text-dim)';
-                modelGroup.style.display = 'block';
-                document.getElementById('ollama-error-alert').style.display = 'none';
 
                 const data = await resp.json();
-                const whiteSelect = document.getElementById('ollama-white-model');
-                const blackSelect = document.getElementById('ollama-black-model');
-                whiteSelect.innerHTML = '';
-                blackSelect.innerHTML = '';
+                
+                if (data.models && data.models.length > 0) {
+                    whiteSelect.innerHTML = '';
+                    blackSelect.innerHTML = '';
 
-                data.models.forEach(m => {
-                    const opt1 = document.createElement('option');
-                    opt1.value = m.name;
-                    opt1.textContent = m.name;
-                    whiteSelect.appendChild(opt1);
+                    data.models.forEach(m => {
+                        const opt1 = document.createElement('option');
+                        opt1.value = m.name;
+                        opt1.textContent = m.name;
+                        whiteSelect.appendChild(opt1);
 
-                    const opt2 = document.createElement('option');
-                    opt2.value = m.name;
-                    opt2.textContent = m.name;
-                    blackSelect.appendChild(opt2);
-                });
+                        const opt2 = document.createElement('option');
+                        opt2.value = m.name;
+                        opt2.textContent = m.name;
+                        blackSelect.appendChild(opt2);
+                    });
+                } else {
+                    whiteSelect.innerHTML = '<option value="">Sin modelos instalados</option>';
+                    blackSelect.innerHTML = '<option value="">Sin modelos instalados</option>';
+                }
             } catch (e) {
                 statusEl.textContent = 'ERROR';
                 statusEl.style.color = 'var(--text-dim)';
-                modelGroup.style.display = 'none';
-                document.getElementById('ollama-error-alert').style.display = 'block';
+                
+                const errAlert = document.getElementById('ollama-error-alert');
+                errAlert.style.display = 'block';
+                // Reiniciar animación para que "entre" visualmente cada vez
+                errAlert.style.animation = 'none';
+                errAlert.offsetHeight; // Forzar reflujo
+                errAlert.style.animation = '';
+                
                 console.error(e);
             }
         }
