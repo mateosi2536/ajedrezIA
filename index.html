@@ -132,7 +132,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .alert-item + .alert-item {
+        .alert-item+.alert-item {
             margin-top: 1rem;
         }
 
@@ -680,9 +680,25 @@
                 </select>
             </div>
 
-            <div id="gemini-section">
-                <input type="password" id="api-key" placeholder="Pega tu API Key aquí..." />
-                <div class="setup-grid">
+            <div id="gemini-creds"><input type="password" id="api-key" placeholder="Pega tu API Key aquí..." /></div>
+            <div id="ollama-creds" style="display:none; text-align: left; margin-bottom: 20px;">
+                <label style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL de Ollama</label>
+                <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434" style="margin-bottom: 0;" />
+                    <div id="ollama-status" style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: center;"></div>
+                </div>
+            </div>
+            <div class="setup-grid" style="grid-template-columns:1fr 1fr; margin-bottom: 20px;">
+                <div class="setup-group">
+                    <label>Modo de Juego</label>
+                    <select id="game-mode" onchange="toggleModo()"><option value="cpu-cpu">CPU vs CPU</option><option value="jugador-cpu">Jugador vs CPU</option></select>
+                </div>
+                <div class="setup-group" id="player-color-group" style="display:none;">
+                    <label>Juegas con</label>
+                    <select id="player-color"><option value="w">Blancas</option><option value="b">Negras</option></select>
+                </div>
+            </div>
+            <div id="gemini-section"><div class="setup-grid">
                     <div class="setup-group" id="white-config">
                         <label>Modelo Blancas</label>
                         <select id="white-model">
@@ -713,9 +729,7 @@
                             <option value="HIGH">ALTO</option>
                         </select>
                     </div>
-                </div>
-            </div>
-
+                </div></div>
             <div id="local-section" style="display:none; margin-bottom: 15px;">
                 <div class="setup-grid">
                     <div class="setup-group" id="local-white-config">
@@ -725,10 +739,7 @@
                             <option value="Qwen3-1.7B-q4f16_1-MLC" selected>Qwen3 1.7B (~900 MB)</option>
                             <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B (~2.3 GB)</option>
                         </select>
-                        <label class="setup-checkbox-label">
-                            <input type="checkbox" id="local-white-thinking">
-                            <span>Razonar</span>
-                        </label>
+                        <label class="setup-checkbox-label"><input type="checkbox" id="local-white-thinking"><span>Razonar</span></label>
                     </div>
                     <div class="setup-group" id="local-black-config">
                         <label>Modelo Negras</label>
@@ -737,68 +748,25 @@
                             <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B (~900 MB)</option>
                             <option value="Qwen3-4B-q4f16_1-MLC" selected>Qwen3 4B (~2.3 GB)</option>
                         </select>
-                        <label class="setup-checkbox-label">
-                            <input type="checkbox" id="local-black-thinking">
-                            <span>Razonar</span>
-                        </label>
+                        <label class="setup-checkbox-label"><input type="checkbox" id="local-black-thinking"><span>Razonar</span></label>
                     </div>
                 </div>
-                <div id="load-progress"
-                    style="display:none; font-size:0.8rem; color: #f59e0b; text-align:center; margin-top: 4px; padding: 6px; background: rgba(0,0,0,0.3); border-radius:6px;">
-                </div>
+                <div id="load-progress" style="display:none; font-size:0.8rem; color: #f59e0b; text-align:center; margin-top: 4px; padding: 6px; background: rgba(0,0,0,0.3); border-radius:6px;"></div>
             </div>
-
             <div id="ollama-section" style="display:none; margin-bottom: 15px; text-align: left;">
-                <label
-                    style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL
-                    de Ollama</label>
-                <div
-                    style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <input type="text" id="ollama-url" value="http://localhost:11434"
-                        placeholder="http://localhost:11434" style="margin-bottom: 0;" />
-                    <div id="ollama-status"
-                        style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: center;">
-                    </div>
-                </div>
-                <div id="ollama-model-group">
-                    <div class="setup-grid">
+                <div id="ollama-model-group"><div class="setup-grid">
                         <div class="setup-group" id="ollama-white-config">
                             <label>Modelo Blancas</label>
                             <select id="ollama-white-model" style="margin-bottom:8px;"></select>
-                            <label class="setup-checkbox-label">
-                                <input type="checkbox" id="ollama-white-thinking">
-                                <span>Razonar</span>
-                            </label>
+                            <label class="setup-checkbox-label"><input type="checkbox" id="ollama-white-thinking"><span>Razonar</span></label>
                         </div>
                         <div class="setup-group" id="ollama-black-config">
                             <label>Modelo Negras</label>
                             <select id="ollama-black-model" style="margin-bottom:8px;"></select>
-                            <label class="setup-checkbox-label">
-                                <input type="checkbox" id="ollama-black-thinking">
-                                <span>Razonar</span>
-                            </label>
+                            <label class="setup-checkbox-label"><input type="checkbox" id="ollama-black-thinking"><span>Razonar</span></label>
                         </div>
-                    </div>
-                </div>
+                    </div></div>
             </div>
-
-            <div class="setup-grid" style="grid-template-columns:1fr 1fr; margin-bottom: 15px;">
-                <div class="setup-group">
-                    <label>Modo de Juego</label>
-                    <select id="game-mode" onchange="toggleModo()">
-                        <option value="cpu-cpu">CPU vs CPU</option>
-                        <option value="jugador-cpu">Jugador vs CPU</option>
-                    </select>
-                </div>
-                <div class="setup-group" id="player-color-group" style="display:none;">
-                    <label>Juegas con</label>
-                    <select id="player-color">
-                        <option value="w">Blancas</option>
-                        <option value="b">Negras</option>
-                    </select>
-                </div>
-            </div>
-
             <button id="start-btn">Comenzar Duelo</button>
         </div>
 
@@ -931,27 +899,15 @@
     <script>
         function toggleProveedor() {
             const val = document.getElementById('ai-provider').value;
-            document.getElementById('gemini-section').style.display = val === 'gemini' ? 'block' : 'none';
-            document.getElementById('local-section').style.display = val === 'local' ? 'block' : 'none';
-            document.getElementById('ollama-section').style.display = val === 'ollama' ? 'block' : 'none';
-
-            // Alerts visibility
-            document.getElementById('alerts-gemini').style.display = val === 'gemini' ? 'block' : 'none';
-            document.getElementById('alerts-local').style.display = val === 'local' ? 'block' : 'none';
-            document.getElementById('alerts-ollama').style.display = val === 'ollama' ? 'block' : 'none';
-
-            const card = document.querySelector('.setup-card');
-            const infoPanel = document.getElementById('info-panel');
-
-            // Alturas precalculadas precisas para cada proveedor: (Base + Padding/Margen)
-            let height = '652.6px';
-            if (val === 'gemini') height = '652.6px'; // (571 + 81.6)
-            else if (val === 'local') height = '551.6px'; // (470 + 81.6)
-            else if (val === 'ollama') height = '620.2px'; // (538.6 + 81.6)
-
-            card.style.height = height;
-            infoPanel.style.height = height;
-
+            ['gemini', 'local', 'ollama'].forEach(p => {
+                const creds = document.getElementById(`${p}-creds`);
+                if (creds) creds.style.display = val === p ? 'block' : 'none';
+                document.getElementById(`${p}-section`).style.display = val === p ? 'block' : 'none';
+                document.getElementById(`alerts-${p}`).style.display = val === p ? 'block' : 'none';
+            });
+            const card = document.querySelector('.setup-card'), info = document.getElementById('info-panel');
+            const heights = { gemini: '652.6px', local: '551.6px', ollama: '620.2px' };
+            card.style.height = info.style.height = heights[val] || '652.6px';
             if (val === 'ollama') fetchOllamaModels();
             toggleModo();
         }
@@ -1108,26 +1064,14 @@
         });
         function toggleModo() {
             const esCpuVsCpu = document.getElementById('game-mode').value === 'cpu-cpu';
-            const esJugador = !esCpuVsCpu;
-            const prov = document.getElementById('ai-provider').value;
-            const playerColor = document.getElementById('player-color').value;
-
-            // Gestionar visibilidad de alertas de optimización (solo CPU vs CPU)
-            document.getElementById('alerts-local-optim').style.display = esCpuVsCpu ? 'block' : 'none';
-            document.getElementById('alerts-ollama-optim').style.display = esCpuVsCpu ? 'block' : 'none';
-
-            document.getElementById('player-color-group').style.display = esJugador ? 'block' : 'none';
-            const hideW = esJugador && playerColor === 'w';
-            const hideB = esJugador && playerColor === 'b';
-            if (prov === 'gemini') {
-                document.getElementById('white-config').style.display = hideW ? 'none' : 'block';
-                document.getElementById('black-config').style.display = hideB ? 'none' : 'block';
-            } else if (prov === 'local') {
-                document.getElementById('local-white-config').style.display = hideW ? 'none' : 'block';
-                document.getElementById('local-black-config').style.display = hideB ? 'none' : 'block';
-            } else if (prov === 'ollama') {
-                document.getElementById('ollama-white-config').style.display = hideW ? 'none' : 'block';
-                document.getElementById('ollama-black-config').style.display = hideB ? 'none' : 'block';
+            const playerColor = document.getElementById('player-color').value, prov = document.getElementById('ai-provider').value;
+            document.getElementById('alerts-local-optim').style.display = document.getElementById('alerts-ollama-optim').style.display = esCpuVsCpu ? 'block' : 'none';
+            document.getElementById('player-color-group').style.display = !esCpuVsCpu ? 'block' : 'none';
+            const hideW = !esCpuVsCpu && playerColor === 'w', hideB = !esCpuVsCpu && playerColor === 'b';
+            const prefix = prov === 'local' ? 'local-' : (prov === 'ollama' ? 'ollama-' : '');
+            if (document.getElementById(`${prefix}white-config`)) {
+                document.getElementById(`${prefix}white-config`).style.display = hideW ? 'none' : 'block';
+                document.getElementById(`${prefix}black-config`).style.display = hideB ? 'none' : 'block';
             }
         }
         document.getElementById('player-color').addEventListener('change', toggleModo);
