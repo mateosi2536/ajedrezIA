@@ -96,7 +96,7 @@
             position: relative;
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            /* Altura fija necesaria para que la transición CSS funcione (no se puede animar height:auto) */
+            /* Altura base (Gemini): 652.6px (571 + 81.6) */
             height: 652.6px;
         }
 
@@ -186,15 +186,34 @@
         }
 
         input {
-            width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 12px;
-            border: 1px solid var(--glass-border); background: rgba(15, 23, 42, 0.8);
-            color: var(--text); font-family: inherit; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            flex: 1; outline: none;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+            font-family: inherit;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex: 1;
+            outline: none;
         }
-        input:hover { background: rgba(30, 41, 59, 0.7); border-color: rgba(255, 255, 255, 0.2); }
-        input:focus { border-color: var(--accent-b); background: rgba(30, 41, 59, 1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
 
-        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active {
+        input:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        input:focus {
+            border-color: var(--accent-b);
+            background: rgba(30, 41, 59, 1);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
             -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
             -webkit-text-fill-color: var(--text) !important;
             transition: background-color 5000s ease-in-out 0s;
@@ -499,6 +518,19 @@
             padding: 0.8rem;
             border-radius: 10px;
             font-size: 0.8rem;
+            animation: logItemEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform-origin: top;
+        }
+
+        @keyframes logItemEnter {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         .log-move {
@@ -715,7 +747,8 @@
                 <label
                     style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL
                     de Ollama</label>
-                <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div
+                    style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                     <input type="text" id="ollama-url" value="http://localhost:11434"
                         placeholder="http://localhost:11434" style="margin-bottom: 0;" />
                     <div id="ollama-status"
@@ -894,11 +927,11 @@
             const card = document.querySelector('.setup-card');
             const infoPanel = document.getElementById('info-panel');
 
-            // Alturas precalculadas para cada proveedor para permitir transiciones suaves
+            // Alturas precalculadas precisas para cada proveedor: (Base + Padding/Margen)
             let height = '652.6px';
-            if (val === 'gemini') height = '652.6px';
-            else if (val === 'local') height = '551.6px';
-            else if (val === 'ollama') height = '652.6px';
+            if (val === 'gemini') height = '652.6px'; // (571 + 81.6)
+            else if (val === 'local') height = '551.6px'; // (470 + 81.6)
+            else if (val === 'ollama') height = '620.2px'; // (538.6 + 81.6)
 
             card.style.height = height;
             infoPanel.style.height = height;
@@ -913,7 +946,7 @@
             const url = document.getElementById('ollama-url').value.trim().replace(/\/$/, '');
             const whiteSelect = document.getElementById('ollama-white-model');
             const blackSelect = document.getElementById('ollama-black-model');
-            
+
             // Estado inicial de "cargando" / "sin conexión"
             statusEl.style.color = 'var(--text-dim)';
             statusEl.innerText = 'CONECTANDO...';
@@ -924,12 +957,12 @@
             try {
                 const resp = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(4000) });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                
+
                 statusEl.textContent = 'CONECTADO';
                 statusEl.style.color = 'var(--text-dim)';
 
                 const data = await resp.json();
-                
+
                 if (data.models && data.models.length > 0) {
                     whiteSelect.innerHTML = '';
                     blackSelect.innerHTML = '';
@@ -952,14 +985,14 @@
             } catch (e) {
                 statusEl.textContent = 'ERROR';
                 statusEl.style.color = 'var(--text-dim)';
-                
+
                 const errAlert = document.getElementById('ollama-error-alert');
                 errAlert.style.display = 'block';
                 // Reiniciar animación para que "entre" visualmente cada vez
                 errAlert.style.animation = 'none';
                 errAlert.offsetHeight; // Forzar reflujo
                 errAlert.style.animation = '';
-                
+
                 console.error(e);
             }
         }
@@ -1244,7 +1277,10 @@
         }
 
         async function triggerAI(movInvalido = null, retries = 0) {
-            if (isPaused || game.game_over()) return handleGameOver();
+            if (isPaused || game.game_over()) {
+                if (game.game_over()) ui.gameStatus.innerText = "Fin";
+                return;
+            }
             if (retries >= 3) {
                 const moves = game.moves();
                 const fallback = moves[Math.floor(Math.random() * moves.length)];
@@ -1265,145 +1301,65 @@
             }
             const isW = game.turn() === 'w';
             const hist = game.history();
-            const ultimosMovs = hist.slice(-6).join(" ");
-            const infoHist = ultimosMovs ? `Últimos movimientos: ${ultimosMovs}.` : "Inicio del juego.";
+            const infoHist = hist.length ? `Últimos movimientos: ${hist.slice(-6).join(" ")}.` : "Inicio del juego.";
             const color = isW ? "Blancas" : "Negras";
-            const advertencia = movInvalido
-                ? `\nADVERTENCIA: tu movimiento anterior "${movInvalido}" no es válido. Elige otro movimiento legal.`
-                : "";
+            const advertencia = movInvalido ? `\nADVERTENCIA: tu movimiento anterior "${movInvalido}" no es válido. Elige otro movimiento legal.` : "";
 
-            if (config.proveedor === 'local') {
-                try {
+            const legalMoves = game.moves();
+            const ejemplo = legalMoves[0];
+            const messages = [
+                { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
+                { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
+            ];
+
+            // Crear entrada viva en el log (UNIFICADA para todos)
+            const liveEntry = document.createElement('div');
+            liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
+            liveEntry.innerHTML = `
+                <div class="log-move" style="opacity:0.4">pensando...</div>
+                <details class="think-details" style="display:none"><summary>▸ Ver razonamiento</summary><div class="think-text"></div></details>
+                <div class="log-text"></div>`;
+            (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
+            const liveMoveEl = liveEntry.querySelector('.log-move');
+            const liveThinkDet = liveEntry.querySelector('.think-details');
+            const liveThinkEl = liveEntry.querySelector('.think-text');
+            const liveTextEl = liveEntry.querySelector('.log-text');
+
+            let thinkContent = '', responseText = '';
+
+            try {
+                if (config.proveedor === 'local') {
                     const sideConf = isW ? config.w : config.b;
-                    const thinkingOn = sideConf.thinking;
-                    const engine = llmEngines[sideConf.model];
-                    const legalMoves = game.moves();
-                    const ejemplo = legalMoves[0];
-                    const messages = [
-                        { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
-                        { role: 'user', content: `${thinkingOn ? '' : '/no_thinking\n'}FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
-                    ];
-                    // Crear entrada viva en el log
-                    const liveEntry = document.createElement('div');
-                    liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
-                    liveEntry.innerHTML = `
-                        <div class="log-move" style="opacity:0.4">pensando...</div>
-                        <details class="think-details" style="display:none">
-                            <summary>▸ Ver razonamiento</summary>
-                            <div class="think-text"></div>
-                        </details>
-                        <div class="log-text"></div>`;
-                    (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
-                    const liveMoveEl = liveEntry.querySelector('.log-move');
-                    const liveThinkDet = liveEntry.querySelector('.think-details');
-                    const liveThinkEl = liveEntry.querySelector('.think-text');
-                    const liveTextEl = liveEntry.querySelector('.log-text');
-
-                    const stream = await engine.chat.completions.create({
-                        messages,
-                        max_tokens: thinkingOn ? 3000 : 1024,
-                        temperature: 0.7,
-                        stream: true,
+                    const stream = await llmEngines[sideConf.model].chat.completions.create({
+                        messages, max_tokens: sideConf.thinking ? 3000 : 1024, temperature: 0.7, stream: true,
                     });
-
-                    let thinkContent = '', responseText = '', buf = '', inThink = false, finishReason = null;
+                    let buf = '', inThink = false;
                     for await (const chunk of stream) {
-                        if (chunk.choices[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
                         buf += chunk.choices[0]?.delta?.content || '';
                         while (buf.length > 0) {
                             if (inThink) {
                                 const e = buf.indexOf('</think>');
-                                if (e !== -1) {
-                                    thinkContent += buf.slice(0, e);
-                                    inThink = false;
-                                    buf = buf.slice(e + 8);
-                                } else {
-                                    thinkContent += buf.slice(0, -8);
-                                    buf = buf.slice(-8);
-                                    break;
-                                }
+                                if (e !== -1) { thinkContent += buf.slice(0, e); inThink = false; buf = buf.slice(e + 8); }
+                                else { thinkContent += buf.slice(0, -8); buf = buf.slice(-8); break; }
                             } else {
                                 const s = buf.indexOf('<think>');
                                 if (s !== -1) { responseText += buf.slice(0, s); inThink = true; buf = buf.slice(s + 7); }
                                 else { responseText += buf; buf = ''; }
                             }
                         }
-                        if (thinkContent) {
-                            liveThinkDet.style.display = '';
-                            liveThinkEl.textContent = thinkContent + (inThink ? '▌' : '');
-                        }
+                        if (thinkContent) { liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + (inThink ? '▌' : ''); }
                         liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + (!inThink && responseText ? '▌' : '');
                     }
-
-                    const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
-                    const moveStr = moveMatch ? moveMatch[1].trim() : '';
-
-                    liveMoveEl.style.opacity = '';
-                    liveMoveEl.textContent = moveStr || '??';
-                    liveThinkEl.textContent = thinkContent.trim();
-                    liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
-
-                    if (game.move(moveStr, { sloppy: true })) {
-                        await board.setPosition(game.fen(), true);
-                        updateMetrics();
-                        setTimeout(() => triggerAI(), 1000);
-                    } else {
-                        liveEntry.remove();
-                        setTimeout(() => triggerAI(moveStr || "desconocido", retries + 1), 1500);
-                    }
-                } catch (e) {
-                    setTimeout(() => triggerAI(null, retries + 1), 3000);
-                }
-                return;
-            }
-
-            if (config.proveedor === 'ollama') {
-                try {
+                } else if (config.proveedor === 'ollama') {
                     const sideConf = isW ? config.w : config.b;
-                    const thinkingOn = sideConf.thinking;
-                    const ollamaModel = sideConf.model;
-                    const legalMoves = game.moves();
-                    const ejemplo = legalMoves[0];
-                    const messages = [
-                        { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
-                        { role: 'user', content: `${thinkingOn ? '' : '/no_thinking\n'}FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
-                    ];
-
-                    const liveEntry = document.createElement('div');
-                    liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
-                    liveEntry.innerHTML = `
-                        <div class="log-move" style="opacity:0.4">pensando...</div>
-                        <details class="think-details" style="display:none">
-                            <summary>▸ Ver razonamiento</summary>
-                            <div class="think-text"></div>
-                        </details>
-                        <div class="log-text"></div>`;
-                    (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
-                    const liveMoveEl = liveEntry.querySelector('.log-move');
-                    const liveThinkDet = liveEntry.querySelector('.think-details');
-                    const liveThinkEl = liveEntry.querySelector('.think-text');
-                    const liveTextEl = liveEntry.querySelector('.log-text');
-
-                    // Endpoint nativo /api/chat — devuelve message.thinking y message.content por separado
                     const res = await fetch(`${config.ollamaUrl}/api/chat`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            model: ollamaModel,
-                            messages,
-                            stream: true,
-                            options: { temperature: 0.7 },
-                            ...(thinkingOn && { think: true })
-                        })
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model: sideConf.model, messages, stream: true, options: { temperature: 0.7 }, ...(sideConf.thinking && { think: true }) })
                     });
-
-                    if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
-
+                    if (!res.ok) throw new Error(`Ollama Error ${res.status}`);
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
                     let ndjsonBuffer = '';
-                    let thinkContent = '', responseText = '';
-
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
@@ -1415,117 +1371,39 @@
                             try {
                                 const json = JSON.parse(line);
                                 const msg = json.message || {};
-                                // thinking llega en msg.thinking, respuesta en msg.content
-                                if (msg.thinking) {
-                                    thinkContent += msg.thinking;
-                                    liveThinkDet.style.display = '';
-                                    liveThinkEl.textContent = thinkContent + '▌';
-                                }
-                                if (msg.content) {
-                                    responseText += msg.content;
-                                    liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
-                                }
-                                if (json.done) break;
+                                if (msg.thinking) { thinkContent += msg.thinking; liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + '▌'; }
+                                if (msg.content) { responseText += msg.content; liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌'; }
                             } catch { continue; }
                         }
                     }
-
-                    const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
-                    const moveStr = moveMatch ? moveMatch[1].trim() : '';
-
-                    liveMoveEl.style.opacity = '';
-                    liveMoveEl.textContent = moveStr || '??';
-                    liveThinkEl.textContent = thinkContent.trim();
-                    liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
-                    if (!thinkContent.trim()) liveThinkDet.style.display = 'none';
-
-                    if (game.move(moveStr, { sloppy: true })) {
-                        await board.setPosition(game.fen(), true);
-                        updateMetrics();
-                        setTimeout(() => triggerAI(), 1000);
-                    } else {
-                        liveEntry.remove();
-                        setTimeout(() => triggerAI(moveStr || "desconocido", retries + 1), 1500);
-                    }
-                } catch (e) {
-                    setTimeout(() => triggerAI(null, retries + 1), 3000);
-                }
-                return;
-            }
-
-            const settings = isW ? config.w : config.b;
-            const model = genAI.getGenerativeModel({
-                model: settings.model,
-                generationConfig: {
-                    thinkingConfig: {
-                        includeThoughts: true,
-                        thinkingLevel: settings.think // Usar el nivel seleccionado (LOW, MEDIUM, HIGH, etc)
-                    }
-                }
-            });
-
-            // Crear entrada viva en el log para Gemini
-            const liveEntry = document.createElement('div');
-            liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
-            liveEntry.innerHTML = `
-                <div class="log-move" style="opacity:0.4">pensando...</div>
-                <details class="think-details" style="display:none">
-                    <summary>▸ Ver razonamiento</summary>
-                    <div class="think-text"></div>
-                </details>
-                <div class="log-text"></div>`;
-            (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
-            const liveMoveElG = liveEntry.querySelector('.log-move');
-            const liveThinkDetG = liveEntry.querySelector('.think-details');
-            const liveThinkElG = liveEntry.querySelector('.think-text');
-            const liveTextElG = liveEntry.querySelector('.log-text');
-
-            try {
-                const sideConf = isW ? config.w : config.b;
-                const legalMoves = game.moves();
-                const ejemplo = legalMoves[0];
-                const messages = [
-                    { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
-                    { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
-                ];
-
-                const prompt = messages.map(m => `${m.role === 'system' ? 'SYSTEM' : 'USER'}: ${m.content}`).join('\n'); // Unificado a string para simplificar
-                const result = await model.generateContentStream(prompt);
-                let thinkContent = '', responseText = '';
-
-                for await (const chunk of result.stream) {
-                    const parts = chunk.candidates?.[0]?.content?.parts || [];
-                    for (const part of parts) {
-                        // Detectar razonamiento nativo de Gemini
-                        if (part.thought) {
-                            thinkContent += part.text || '';
-                            liveThinkDetG.style.display = '';
-                            liveThinkElG.textContent = thinkContent + '▌';
-                        } 
-                        // Detectar texto de respuesta
-                        else if (part.text) {
-                            responseText += part.text;
-                            liveTextElG.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
+                } else if (config.proveedor === 'gemini') {
+                    const sideConf = isW ? config.w : config.b;
+                    const model = genAI.getGenerativeModel({
+                        model: sideConf.model,
+                        generationConfig: { thinkingConfig: { includeThoughts: true, thinkingLevel: sideConf.think } }
+                    });
+                    const prompt = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+                    const result = await model.generateContentStream(prompt);
+                    for await (const chunk of result.stream) {
+                        for (const part of chunk.candidates?.[0]?.content?.parts || []) {
+                            if (part.thought) { thinkContent += part.text || ''; liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + '▌'; }
+                            else if (part.text) { responseText += part.text; liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌'; }
                         }
                     }
-                }
-
-                const finalResponse = await result.response;
-                const usage = finalResponse.usageMetadata;
-                if (usage?.totalTokenCount) {
-                    const side = isW ? 'w' : 'b';
-                    tokenUsage[side] += usage.totalTokenCount;
-                    document.getElementById(`token-${side}`).innerText = `Tokens: ${tokenUsage[side].toLocaleString()}`;
+                    const usage = (await result.response).usageMetadata;
+                    if (usage?.totalTokenCount) {
+                        tokenUsage[isW ? 'w' : 'b'] += usage.totalTokenCount;
+                        document.getElementById(`token-${isW ? 'w' : 'b'}`).innerText = `Tokens: ${tokenUsage[isW ? 'w' : 'b'].toLocaleString()}`;
+                    }
                 }
 
                 const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
                 const moveStr = moveMatch ? moveMatch[1].trim() : "";
-
-                liveMoveElG.style.opacity = '';
-                liveMoveElG.textContent = moveStr || '??';
-                liveThinkElG.textContent = thinkContent.trim();
-                liveTextElG.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
-                if (!thinkContent.trim()) liveThinkDetG.style.display = 'none';
+                liveMoveEl.style.opacity = '';
+                liveMoveEl.textContent = moveStr || '??';
+                liveThinkEl.textContent = thinkContent.trim();
+                liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
+                if (!thinkContent.trim()) liveThinkDet.style.display = 'none';
 
                 if (game.move(moveStr, { sloppy: true })) {
                     await board.setPosition(game.fen(), true);
@@ -1535,15 +1413,19 @@
                     liveEntry.remove();
                     setTimeout(() => triggerAI(moveStr || "desconocido", retries + 1), 1500);
                 }
-            } catch (e) { liveEntry.remove(); setTimeout(() => triggerAI(null, retries + 1), 3000); }
+            } catch (e) {
+                console.error(e);
+                liveEntry.remove();
+                setTimeout(() => triggerAI(null, retries + 1), 3000);
+            }
         }
 
         function updateMetrics() {
             const vals = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
             let sumW = 0, sumB = 0;
             game.board().flat().filter(p => p).forEach(p => {
-                if (p.color === 'w') sumW += vals[p.type];
-                else sumB += vals[p.type];
+                const val = vals[p.type];
+                if (p.color === 'w') sumW += val; else sumB += val;
             });
             ui.scoreW.innerText = sumW; ui.scoreB.innerText = sumB;
             const diff = sumW - sumB;
@@ -1551,25 +1433,6 @@
             ui.turnCount.innerText = Math.floor(game.history().length / 2) + 1;
             const total = sumW + sumB;
             ui.advantageBar.style.width = (total === 0 ? 50 : (sumB / total) * 100) + "%";
-        }
-
-        function logReasoning(isW, text, move, raw = null) {
-            const entry = document.createElement('div');
-            entry.className = `log-item ${isW ? 'white' : 'black'}`;
-            let html = `<div class="log-move">${move}</div><div class="log-text">${text}</div>`;
-            if (raw) {
-                const escapedRaw = raw.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                html += `<details style="margin-top: 10px; font-size: 0.75rem; opacity: 0.9; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 5px;">
-                            <summary style="cursor:pointer; color: #f59e0b; font-weight: 600;">Ver respuesta cruda (Depuración)</summary>
-                            <pre style="white-space: pre-wrap; margin-top: 5px; font-family: inherit;">${escapedRaw}</pre>
-                         </details>`;
-            }
-            entry.innerHTML = html;
-            (isW ? ui.logsW : ui.logsB).prepend(entry);
-        }
-
-        function handleGameOver() {
-            if (game.game_over()) ui.gameStatus.innerText = "Fin";
         }
     </script>
 </body>
