@@ -9,7 +9,8 @@
     <!-- Librerías Externas CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cm-chessboard@8.5.0/assets/chessboard.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap">
-    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%233b82f6" d="M30 10c0-5.523 4.477-10 10-10h20c5.523 0 10 4.477 10 10v10c0 10.14-5.632 19.344-14.717 23.886C64.63 47.93 70 57.346 70 68v22c0 5.523-4.477 10-10 10H40c-5.523 0-10-4.477-10-10V68c0-10.654 5.37-20.07 14.717-24.114C35.632 39.344 30 30.14 30 20V10zM50 50c-2.761 0-5-2.239-5-5s2.239-5 5-5 5 2.239 5 5-2.239 5-5 5z"/><circle cx="50" cy="20" r="8" fill="white"/></svg>'>
+    <link rel="icon" type="image/svg+xml"
+        href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%233b82f6" d="M30 10c0-5.523 4.477-10 10-10h20c5.523 0 10 4.477 10 10v10c0 10.14-5.632 19.344-14.717 23.886C64.63 47.93 70 57.346 70 68v22c0 5.523-4.477 10-10 10H40c-5.523 0-10-4.477-10-10V68c0-10.654 5.37-20.07 14.717-24.114C35.632 39.344 30 30.14 30 20V10zM50 50c-2.761 0-5-2.239-5-5s2.239-5 5-5 5 2.239 5 5-2.239 5-5 5z"/><circle cx="50" cy="20" r="8" fill="white"/></svg>'>
 
     <style>
         :root {
@@ -80,6 +81,8 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            gap: 2rem;
+            padding: 2rem;
         }
 
         .setup-card {
@@ -92,8 +95,72 @@
             box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.8);
             position: relative;
             overflow: hidden;
-            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 652.6px; /* 571 + 80 + 1.6 */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 652.6px;
+            /* 571 + 80 + 1.6 */
+        }
+
+        /* --- PANEL DE INFO (Simplificado) --- */
+        .info-panel {
+            width: 400px;
+            height: 652.6px;
+            background: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: all 0.4s ease;
+            overflow-y: auto;
+            scrollbar-width: none;
+            justify-content: flex-start;
+        }
+
+        .info-panel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .alert-item {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 1.2rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-dim);
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .alert-item b {
+            color: var(--text);
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            margin-top: 10px;
+            color: var(--text-dim);
+            /* Unificado con el texto del form */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .setup-card::before {
@@ -709,6 +776,55 @@
 
             <button id="start-btn">Comenzar Duelo</button>
         </div>
+
+        <div class="info-panel" id="info-panel">
+            <!-- Gemini Alerts -->
+            <div id="alerts-gemini">
+                <div class="alert-item">
+                    <b>Privacidad Garantizada</b>
+                    Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún
+                    servidor externo.
+                </div>
+                <div class="alert-item" style="margin-top: 1rem;">
+                    <b>Control de Gastos</b>
+                    Se recomienda fijar un límite de uso en tu consola de Google Cloud para evitar que bucles infinitos
+                    en el razonamiento generen costes inesperados.
+                </div>
+            </div>
+
+            <!-- Local Alerts -->
+            <div id="alerts-local" style="display:none;">
+                <div class="alert-item">
+                    <b>Tecnología Experimental</b>
+                    El uso de modelos LLM directamente en el navegador (WebLLM) es una tecnología en desarrollo. La
+                    eficiencia será menor que la de modelos nativos.
+                </div>
+                <div class="alert-item" style="margin-top: 1rem;">
+                    <b>Complejidad del Ajedrez</b>
+                    Jugar ajedrez es una tarea compleja para un LLM pequeño. Los modelos menos inteligentes podrían
+                    realizar movimientos ilegales o incoherentes.
+                </div>
+            </div>
+
+            <!-- Ollama Alerts -->
+            <div id="alerts-ollama" style="display:none;">
+                <div class="alert-item">
+                    <b>Servicio Local Requerido</b>
+                    Asegúrate de que Ollama esté ejecutándose en tu PC antes de intentar conectar.
+                </div>
+                <div class="alert-item" style="margin-top: 1rem;">
+                    <b>Configuración de Acceso (CORS)</b>
+                    Para permitir la conexión, configura esta variable de entorno y reinicia Ollama:
+                    <div class="code-block">OLLAMA_ORIGINS=https://mateosi2536.github.io</div>
+                </div>
+                <div id="ollama-error-alert" class="alert-item"
+                    style="margin-top: 1rem; display: none; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05);">
+                    <b style="color: #ef4444;">Error de Conexión</b>
+                    No se puede contactar con Ollama. Verifica que el servidor esté activo y que la variable CORS sea
+                    correcta.
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- INTERFAZ PRINCIPAL -->
@@ -783,10 +899,21 @@
             document.getElementById('local-section').style.display = val === 'local' ? 'block' : 'none';
             document.getElementById('ollama-section').style.display = val === 'ollama' ? 'block' : 'none';
 
+            // Alerts visibility
+            document.getElementById('alerts-gemini').style.display = val === 'gemini' ? 'block' : 'none';
+            document.getElementById('alerts-local').style.display = val === 'local' ? 'block' : 'none';
+            document.getElementById('alerts-ollama').style.display = val === 'ollama' ? 'block' : 'none';
+
             const card = document.querySelector('.setup-card');
-            if (val === 'gemini') card.style.height = '652.6px';
-            else if (val === 'local') card.style.height = '551.6px';
-            else if (val === 'ollama') card.style.height = '620.2px';
+            const infoPanel = document.getElementById('info-panel');
+
+            let height = '652.6px';
+            if (val === 'gemini') height = '652.6px';
+            else if (val === 'local') height = '551.6px';
+            else if (val === 'ollama') height = '620.2px';
+
+            card.style.height = height;
+            infoPanel.style.height = height;
 
             if (val === 'ollama') fetchOllamaModels();
             toggleModo();
@@ -797,28 +924,42 @@
             const statusEl = document.getElementById('ollama-status');
             const modelGroup = document.getElementById('ollama-model-group');
             const url = document.getElementById('ollama-url').value.trim().replace(/\/$/, '');
-            statusEl.style.color = '#f59e0b';
+
+            statusEl.style.color = 'var(--text-dim)';
             statusEl.innerText = 'CONECTANDO...';
             modelGroup.style.display = 'none';
             try {
-                const res = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(4000) });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                const models = data.models || [];
-                if (models.length === 0) {
-                    statusEl.style.color = '#f59e0b';
-                    statusEl.innerText = 'SIN MODELOS';
-                } else {
-                    statusEl.style.color = '#10b981';
-                    statusEl.innerText = 'CONECTADO';
-                    const opts = models.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
-                    document.getElementById('ollama-white-model').innerHTML = opts;
-                    document.getElementById('ollama-black-model').innerHTML = opts;
-                    modelGroup.style.display = 'block';
-                }
+                const resp = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(4000) });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                statusEl.textContent = 'CONECTADO';
+                statusEl.style.color = 'var(--text-dim)';
+                modelGroup.style.display = 'block';
+                document.getElementById('ollama-error-alert').style.display = 'none';
+
+                const data = await resp.json();
+                const whiteSelect = document.getElementById('ollama-white-model');
+                const blackSelect = document.getElementById('ollama-black-model');
+                whiteSelect.innerHTML = '';
+                blackSelect.innerHTML = '';
+
+                data.models.forEach(m => {
+                    const opt1 = document.createElement('option');
+                    opt1.value = m.name;
+                    opt1.textContent = m.name;
+                    whiteSelect.appendChild(opt1);
+
+                    const opt2 = document.createElement('option');
+                    opt2.value = m.name;
+                    opt2.textContent = m.name;
+                    blackSelect.appendChild(opt2);
+                });
             } catch (e) {
-                statusEl.style.color = '#ef4444';
-                statusEl.innerText = 'DESCONECTADO';
+                statusEl.textContent = 'ERROR';
+                statusEl.style.color = 'var(--text-dim)';
+                modelGroup.style.display = 'none';
+                document.getElementById('ollama-error-alert').style.display = 'block';
+                console.error(e);
             }
         }
 
