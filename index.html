@@ -19,6 +19,7 @@
             --text: #f8fafc;
             --text-dim: #94a3b8;
             --glass-border: rgba(255, 255, 255, 0.1);
+            color-scheme: dark;
         }
 
         * {
@@ -81,33 +82,89 @@
         }
 
         .setup-card {
-            background: #1e293b;
+            background: linear-gradient(165deg, #1e293b 0%, #0f172a 100%);
             padding: 2.5rem;
-            border-radius: 24px;
+            border-radius: 28px;
             text-align: center;
             width: 550px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .setup-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .setup-card h1 {
+            font-size: 2.2rem;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to bottom, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
         }
 
         input {
             width: 100%;
             padding: 12px;
             margin-bottom: 20px;
-            border-radius: 10px;
-            border: 1px solid #334155;
-            background: #0f172a;
-            color: white;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: var(--accent-b);
+            background: rgba(30, 41, 59, 1);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        /* --- PREVENIR FONDO BLANCO EN AUTOCOMPLETE --- */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px #0f172a inset !important;
+            -webkit-text-fill-color: var(--text) !important;
+            transition: background-color 5000s ease-in-out 0s;
         }
 
         button {
             width: 100%;
-            background: linear-gradient(to right, #3b82f6, #2563eb);
+            background: linear-gradient(135deg, var(--accent-b), #2563eb);
             color: white;
             border: none;
             padding: 14px;
-            border-radius: 12px;
+            border-radius: 14px;
             font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            filter: brightness(1.1);
+        }
+
+        button:active {
+            transform: translateY(0);
         }
 
         .setup-grid {
@@ -120,22 +177,176 @@
 
         .setup-group label {
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.05em;
             color: var(--text-dim);
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             text-transform: uppercase;
+            font-weight: 600;
         }
 
-        select {
+        /* --- CUSTOM SELECT (PATRÓN REUTILIZADO) --- */
+        .custom-select {
+            position: relative;
             width: 100%;
-            padding: 10px;
-            background: #0f172a;
-            color: white;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-family: inherit;
+            margin-bottom: 15px;
+        }
+
+        .select-hidden {
+            display: none !important;
+        }
+
+        .custom-select-trigger {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+
+        .custom-select-trigger:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        .custom-select.active .custom-select-trigger {
+            border-color: var(--accent-b);
+            background: rgba(30, 41, 59, 1);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+        }
+
+        .custom-select-trigger::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-right: 2px solid var(--text-dim);
+            border-bottom: 2px solid var(--text-dim);
+            transform: rotate(45deg) translateY(-2px);
+            transition: all 0.3s ease;
+            margin-left: 10px;
+        }
+
+        .custom-select.active .custom-select-trigger::after {
+            transform: rotate(-135deg) translateY(-2px);
+            border-color: var(--accent-b);
+        }
+
+        .custom-options {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            overflow: hidden;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            transform: translateY(-10px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-select.active .custom-options {
+            display: flex;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .custom-option {
+            padding: 12px 16px;
+            cursor: pointer;
             font-size: 0.85rem;
+            color: var(--text-dim);
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .custom-option:last-child {
+            border-bottom: none;
+        }
+
+        .custom-option:hover {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--text);
+            padding-left: 20px;
+        }
+
+        .custom-option.selected {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--accent-b);
+            font-weight: 600;
+        }
+
+        .setup-group .setup-checkbox-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            user-select: none;
+            margin-top: 8px;
+            padding-left: 6px;
+            transition: color 0.3s ease;
+            line-height: normal;
+        }
+
+        .setup-checkbox-label:hover {
+            color: var(--text);
+        }
+
+        .setup-checkbox-label input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            border-radius: 4px;
+            background: rgba(15, 23, 42, 0.6);
+            display: grid;
+            place-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .setup-checkbox-label input[type="checkbox"]:checked {
+            background: var(--accent-b);
+            border-color: var(--accent-b);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .setup-checkbox-label input[type="checkbox"]::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 10px 10px white;
+            clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+
+        .setup-checkbox-label input[type="checkbox"]:checked::before {
+            transform: scale(1);
+        }
+
+        .setup-checkbox-label span {
+            display: inline-block;
+            transform: translateY(-1px);
         }
 
         /* --- INTERFAZ JUEGO --- */
@@ -241,6 +452,36 @@
             font-style: italic;
             opacity: 0.8;
             margin-top: 4px;
+            white-space: pre-wrap;
+        }
+
+        .think-details {
+            margin: 6px 0 2px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .think-details summary {
+            cursor: pointer;
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            color: #f59e0b;
+            font-weight: 600;
+            list-style: none;
+            user-select: none;
+        }
+
+        .think-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .think-details .think-text {
+            padding: 6px 8px;
+            font-size: 0.72rem;
+            white-space: pre-wrap;
+            opacity: 0.75;
+            font-style: italic;
         }
 
         /* Centro */
@@ -332,9 +573,114 @@
     <div id="setup-overlay">
         <div class="setup-card">
             <h1>Ajedrez Analítico</h1>
-            <p style="color: var(--text-dim); margin-bottom: 2rem;">Configura tus Motores Gemini 3.1 Pro</p>
+            <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Configura la partida</p>
 
-            <input type="password" id="api-key" placeholder="Pega tu API Key aquí..." />
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label
+                    style="display:block; font-size:0.65rem; color: var(--text-dim); margin-bottom:8px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Proveedor
+                    de IA</label>
+                <select id="ai-provider" onchange="toggleProveedor()">
+                    <option value="gemini">Gemini (API Key)</option>
+                    <option value="local">Local (WebLLM, sin API Key)</option>
+                    <option value="ollama">Ollama (servidor local)</option>
+                </select>
+            </div>
+
+            <div id="gemini-section">
+                <input type="password" id="api-key" placeholder="Pega tu API Key aquí..." />
+                <div class="setup-grid">
+                    <div class="setup-group" id="white-config">
+                        <label>Modelo Blancas</label>
+                        <select id="white-model">
+                            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                            <option value="gemini-3.1-flash-lite-preview" selected>Gemini 3.1 Flash Lite</option>
+                            <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
+                        </select>
+                        <label>Razonamiento (Blancas)</label>
+                        <select id="white-think">
+                            <option value="MINIMAL">MÍNIMO</option>
+                            <option value="LOW">BAJO</option>
+                            <option value="MEDIUM" selected>MEDIO</option>
+                            <option value="HIGH">ALTO</option>
+                        </select>
+                    </div>
+                    <div class="setup-group" id="black-config">
+                        <label>Modelo Negras</label>
+                        <select id="black-model">
+                            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                            <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
+                            <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
+                        </select>
+                        <label>Razonamiento (Negras)</label>
+                        <select id="black-think">
+                            <option value="MINIMAL">MÍNIMO</option>
+                            <option value="LOW">BAJO</option>
+                            <option value="MEDIUM" selected>MEDIO</option>
+                            <option value="HIGH">ALTO</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="local-section" style="display:none; margin-bottom: 15px;">
+                <div class="setup-grid">
+                    <div class="setup-group" id="local-white-config">
+                        <label>Modelo Blancas</label>
+                        <select id="local-white-model">
+                            <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
+                            <option value="Qwen3-1.7B-q4f16_1-MLC" selected>Qwen3 1.7B (~900 MB)</option>
+                            <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B (~2.3 GB)</option>
+                        </select>
+                        <label class="setup-checkbox-label">
+                            <input type="checkbox" id="local-white-thinking">
+                            <span>Razonar</span>
+                        </label>
+                    </div>
+                    <div class="setup-group" id="local-black-config">
+                        <label>Modelo Negras</label>
+                        <select id="local-black-model">
+                            <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
+                            <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B (~900 MB)</option>
+                            <option value="Qwen3-4B-q4f16_1-MLC" selected>Qwen3 4B (~2.3 GB)</option>
+                        </select>
+                        <label class="setup-checkbox-label">
+                            <input type="checkbox" id="local-black-thinking">
+                            <span>Razonar</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="load-progress"
+                    style="display:none; font-size:0.8rem; color: #f59e0b; text-align:center; margin-top: 4px; padding: 6px; background: rgba(0,0,0,0.3); border-radius:6px;">
+                </div>
+            </div>
+
+            <div id="ollama-section" style="display:none; margin-bottom: 15px; text-align: left;">
+                <label style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL de Ollama</label>
+                <div style="display: flex; gap: 12px; align-items: center; margin-bottom:8px;">
+                    <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434" style="margin-bottom:0; flex: 1;" />
+                    <div id="ollama-status" style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: right;"></div>
+                </div>
+                <div id="ollama-model-group" style="display:none;">
+                    <div class="setup-grid">
+                        <div class="setup-group" id="ollama-white-config">
+                            <label>Modelo Blancas</label>
+                            <select id="ollama-white-model" style="margin-bottom:8px;"></select>
+                            <label class="setup-checkbox-label">
+                                <input type="checkbox" id="ollama-white-thinking">
+                                <span>Razonar</span>
+                            </label>
+                        </div>
+                        <div class="setup-group" id="ollama-black-config">
+                            <label>Modelo Negras</label>
+                            <select id="ollama-black-model" style="margin-bottom:8px;"></select>
+                            <label class="setup-checkbox-label">
+                                <input type="checkbox" id="ollama-black-thinking">
+                                <span>Razonar</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="setup-grid" style="grid-template-columns:1fr 1fr; margin-bottom: 15px;">
                 <div class="setup-group">
@@ -349,42 +695,6 @@
                     <select id="player-color">
                         <option value="w">Blancas</option>
                         <option value="b">Negras</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="setup-grid">
-                <!-- Blancas -->
-                <div class="setup-group" id="white-config">
-                    <label>Modelo Blancas</label>
-                    <select id="white-model">
-                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-                        <option value="gemini-3.1-flash-lite-preview" selected>Gemini 3.1 Flash Lite</option>
-                        <option value="gemini-3-flash-preview">Gemini 3 Flash</option>
-                    </select>
-                    <label>Razonamiento (Blancas)</label>
-                    <select id="white-think">
-                        <option value="MINIMAL">MÍNIMO</option>
-                        <option value="LOW">BAJO</option>
-                        <option value="MEDIUM" selected>MEDIO</option>
-                        <option value="HIGH">ALTO</option>
-                    </select>
-                </div>
-
-                <!-- Negras -->
-                <div class="setup-group" id="black-config">
-                    <label>Modelo Negras</label>
-                    <select id="black-model">
-                        <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-                        <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
-                        <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
-                    </select>
-                    <label>Razonamiento (Negras)</label>
-                    <select id="black-think">
-                        <option value="MINIMAL">MÍNIMO</option>
-                        <option value="LOW">BAJO</option>
-                        <option value="MEDIUM" selected>MEDIO</option>
-                        <option value="HIGH">ALTO</option>
                     </select>
                 </div>
             </div>
@@ -459,23 +769,167 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script>
+        function toggleProveedor() {
+            const val = document.getElementById('ai-provider').value;
+            document.getElementById('gemini-section').style.display = val === 'gemini' ? 'block' : 'none';
+            document.getElementById('local-section').style.display = val === 'local' ? 'block' : 'none';
+            document.getElementById('ollama-section').style.display = val === 'ollama' ? 'block' : 'none';
+            if (val === 'ollama') fetchOllamaModels();
+            toggleModo();
+        }
+
+        let ollamaFetchTimer = null;
+        async function fetchOllamaModels() {
+            const statusEl = document.getElementById('ollama-status');
+            const modelGroup = document.getElementById('ollama-model-group');
+            const url = document.getElementById('ollama-url').value.trim().replace(/\/$/, '');
+            statusEl.style.color = '#f59e0b';
+            statusEl.innerText = 'CONECTANDO...';
+            modelGroup.style.display = 'none';
+            try {
+                const res = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(4000) });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const models = data.models || [];
+                if (models.length === 0) {
+                    statusEl.style.color = '#f59e0b';
+                    statusEl.innerText = 'SIN MODELOS';
+                } else {
+                    statusEl.style.color = '#10b981';
+                    statusEl.innerText = 'CONECTADO';
+                    const opts = models.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+                    document.getElementById('ollama-white-model').innerHTML = opts;
+                    document.getElementById('ollama-black-model').innerHTML = opts;
+                    modelGroup.style.display = 'block';
+                }
+            } catch (e) {
+                statusEl.style.color = '#ef4444';
+                statusEl.innerText = 'DESCONECTADO';
+            }
+        }
+
+        // --- SISTEMA DE SELECTS PERSONALIZADOS ---
+        function updateCustomSelects() {
+            document.querySelectorAll('select').forEach(select => {
+                if (select.classList.contains('select-hidden')) {
+                    // Ya está procesado, actualizar texto y opciones
+                    const container = select.parentElement;
+                    const trigger = container.querySelector('.custom-select-trigger');
+                    const optionsContainer = container.querySelector('.custom-options');
+                    
+                    trigger.innerText = select.options[select.selectedIndex]?.text || '';
+                    
+                    optionsContainer.innerHTML = '';
+                    Array.from(select.options).forEach((option, idx) => {
+                        const optDiv = document.createElement('div');
+                        optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
+                        optDiv.innerText = option.text;
+                        optDiv.onclick = (e) => {
+                            e.stopPropagation();
+                            select.selectedIndex = idx;
+                            select.dispatchEvent(new Event('change'));
+                            container.classList.remove('active');
+                            updateCustomSelects(); 
+                        };
+                        optionsContainer.appendChild(optDiv);
+                    });
+                    return;
+                }
+
+                // Crear estructura personalizada
+                const container = document.createElement('div');
+                container.className = 'custom-select';
+                select.parentNode.insertBefore(container, select);
+                container.appendChild(select);
+                select.classList.add('select-hidden');
+
+                const trigger = document.createElement('div');
+                trigger.className = 'custom-select-trigger';
+                trigger.innerText = select.options[select.selectedIndex]?.text || '';
+                
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'custom-options';
+
+                trigger.onclick = (e) => {
+                    e.stopPropagation();
+                    // Cerrar otros abiertos
+                    document.querySelectorAll('.custom-select').forEach(cs => {
+                        if (cs !== container) cs.classList.remove('active');
+                    });
+                    container.classList.toggle('active');
+                };
+
+                container.appendChild(trigger);
+                container.appendChild(optionsContainer);
+                
+                // Actualizar opciones inicialmente
+                const refreshOptions = () => {
+                    optionsContainer.innerHTML = '';
+                    Array.from(select.options).forEach((option, idx) => {
+                        const optDiv = document.createElement('div');
+                        optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
+                        optDiv.innerText = option.text;
+                        optDiv.onclick = (e) => {
+                            e.stopPropagation();
+                            select.selectedIndex = idx;
+                            select.dispatchEvent(new Event('change'));
+                            container.classList.remove('active');
+                            updateCustomSelects();
+                        };
+                        optionsContainer.appendChild(optDiv);
+                    });
+                    trigger.innerText = select.options[select.selectedIndex]?.text || '';
+                };
+
+                refreshOptions();
+
+                // Observar cambios internos (para Ollama que inyecta opciones)
+                const observer = new MutationObserver(refreshOptions);
+                observer.observe(select, { childList: true });
+            });
+        }
+
+        // Cerrar al click afuera
+        window.addEventListener('click', () => {
+            document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('active'));
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCustomSelects();
+            document.getElementById('ollama-url').addEventListener('input', () => {
+                clearTimeout(ollamaFetchTimer);
+                ollamaFetchTimer = setTimeout(fetchOllamaModels, 600);
+            });
+        });
         function toggleModo() {
             const esJugador = document.getElementById('game-mode').value === 'jugador-cpu';
+            const prov = document.getElementById('ai-provider').value;
+            const playerColor = document.getElementById('player-color').value;
             document.getElementById('player-color-group').style.display = esJugador ? 'block' : 'none';
-            document.getElementById('white-config').style.display = (esJugador && document.getElementById('player-color').value === 'w') ? 'none' : 'block';
-            document.getElementById('black-config').style.display = (esJugador && document.getElementById('player-color').value === 'b') ? 'none' : 'block';
+            const hideW = esJugador && playerColor === 'w';
+            const hideB = esJugador && playerColor === 'b';
+            if (prov === 'gemini') {
+                document.getElementById('white-config').style.display = hideW ? 'none' : 'block';
+                document.getElementById('black-config').style.display = hideB ? 'none' : 'block';
+            } else if (prov === 'local') {
+                document.getElementById('local-white-config').style.display = hideW ? 'none' : 'block';
+                document.getElementById('local-black-config').style.display = hideB ? 'none' : 'block';
+            } else if (prov === 'ollama') {
+                document.getElementById('ollama-white-config').style.display = hideW ? 'none' : 'block';
+                document.getElementById('ollama-black-config').style.display = hideB ? 'none' : 'block';
+            }
         }
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('player-color').addEventListener('change', toggleModo);
-        });
+        document.getElementById('player-color').addEventListener('change', toggleModo);
     </script>
     <script type="module">
         import { Chessboard, FEN, INPUT_EVENT_TYPE, COLOR } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/Chessboard.js";
         import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+        import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
         let game = new Chess();
         let board = null;
         let genAI = null;
+        let llmEngines = {};  // cache: modelId → engine
         let isPaused = false;
         let tokenUsage = { w: 0, b: 0 };
 
@@ -483,8 +937,10 @@
             apiKey: "",
             modo: "cpu-cpu",
             playerColor: "w",
-            w: { model: "", think: "" },
-            b: { model: "", think: "" }
+            proveedor: "gemini",
+            ollamaUrl: "",
+            w: { model: "", think: "", thinking: false },
+            b: { model: "", think: "", thinking: false }
         };
 
         const ui = {
@@ -498,25 +954,84 @@
             gameStatus: document.getElementById('game-status')
         };
 
-        document.getElementById('start-btn').onclick = () => {
-            config.apiKey = document.getElementById('api-key').value.trim();
-            if (!config.apiKey) return alert("Falta API Key");
-
-            genAI = new GoogleGenerativeAI(config.apiKey);
+        document.getElementById('start-btn').onclick = async () => {
+            config.proveedor = document.getElementById('ai-provider').value;
             config.modo = document.getElementById('game-mode').value;
             config.playerColor = document.getElementById('player-color').value;
-            config.w.model = document.getElementById('white-model').value;
-            config.w.think = document.getElementById('white-think').value;
-            config.b.model = document.getElementById('black-model').value;
-            config.b.think = document.getElementById('black-think').value;
+
+            if (config.proveedor === 'gemini') {
+                config.apiKey = document.getElementById('api-key').value.trim();
+                if (!config.apiKey) return alert("Falta API Key");
+                genAI = new GoogleGenerativeAI(config.apiKey);
+                config.w.model = document.getElementById('white-model').value;
+                config.w.think = document.getElementById('white-think').value;
+                config.b.model = document.getElementById('black-model').value;
+                config.b.think = document.getElementById('black-think').value;
+            } else if (config.proveedor === 'local') {
+                config.w.model = document.getElementById('local-white-model').value;
+                config.b.model = document.getElementById('local-black-model').value;
+                config.w.thinking = document.getElementById('local-white-thinking').checked;
+                config.b.thinking = document.getElementById('local-black-thinking').checked;
+                const esJug = config.modo === 'jugador-cpu';
+                const modelsNeeded = [...new Set([
+                    (!esJug || config.playerColor !== 'w') ? config.w.model : null,
+                    (!esJug || config.playerColor !== 'b') ? config.b.model : null,
+                ].filter(Boolean))];
+                const toLoad = modelsNeeded.filter(m => !llmEngines[m]);
+                if (toLoad.length > 0) {
+                    const startBtn = document.getElementById('start-btn');
+                    const progress = document.getElementById('load-progress');
+                    startBtn.disabled = true;
+                    progress.style.display = 'block';
+                    for (const modelId of toLoad) {
+                        const idx = toLoad.indexOf(modelId);
+                        startBtn.innerText = toLoad.length > 1 ? `Cargando (${idx + 1}/${toLoad.length})...` : 'Cargando modelo...';
+                        progress.style.color = '#f59e0b';
+                        progress.innerText = 'Iniciando descarga...';
+                        try {
+                            llmEngines[modelId] = await webllm.CreateMLCEngine(modelId, {
+                                initProgressCallback: p => { progress.innerText = p.text; }
+                            });
+                        } catch (err) {
+                            console.error(err);
+                            delete llmEngines[modelId];
+                            startBtn.disabled = false;
+                            startBtn.innerText = 'Comenzar Duelo';
+                            progress.innerText = 'Error al cargar el modelo.';
+                            progress.style.color = '#ef4444';
+                            return;
+                        }
+                    }
+                    progress.style.color = '#10b981';
+                    progress.innerText = 'Modelo(s) listos.';
+                    startBtn.disabled = false;
+                    startBtn.innerText = 'Comenzar Duelo';
+                }
+            } else if (config.proveedor === 'ollama') {
+                const wModel = document.getElementById('ollama-white-model').value;
+                const bModel = document.getElementById('ollama-black-model').value;
+                if (!wModel || !bModel) return alert("Conecta con Ollama y selecciona un modelo primero.");
+                config.ollamaUrl = document.getElementById('ollama-url').value.trim().replace(/\/$/, '');
+                config.w.model = wModel;
+                config.b.model = bModel;
+                config.w.thinking = document.getElementById('ollama-white-thinking').checked;
+                config.b.thinking = document.getElementById('ollama-black-thinking').checked;
+            }
 
             const esJugador = config.modo === 'jugador-cpu';
-            const nombreW = esJugador && config.playerColor === 'w' ? 'Tú' : config.w.model;
-            const nombreB = esJugador && config.playerColor === 'b' ? 'Tú' : config.b.model;
             document.querySelector('.player-info.white .player-name').innerText = esJugador && config.playerColor === 'w' ? 'Tú (Blancas)' : 'Blancas (CPU)';
             document.querySelector('.player-info.black .player-name').innerText = esJugador && config.playerColor === 'b' ? 'Tú (Negras)' : 'Negras (CPU)';
-            document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : `${config.w.model} (${config.w.think})`;
-            document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : `${config.b.model} (${config.b.think})`;
+            if (config.proveedor === 'gemini') {
+                document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : `${config.w.model} (${config.w.think})`;
+                document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : `${config.b.model} (${config.b.think})`;
+            } else if (config.proveedor === 'local') {
+                const getLabel = id => { const s = document.getElementById(id); return s.options[s.selectedIndex].text; };
+                document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : getLabel('local-white-model');
+                document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : getLabel('local-black-model');
+            } else if (config.proveedor === 'ollama') {
+                document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : config.w.model;
+                document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : config.b.model;
+            }
 
             ui.setup.style.display = "none";
             ui.main.classList.remove('hidden');
@@ -572,16 +1087,217 @@
             }, colorBoard);
         }
 
-        async function triggerAI(movInvalido = null) {
+        async function triggerAI(movInvalido = null, retries = 0) {
             if (isPaused || game.game_over()) return handleGameOver();
-            // Si es el turno del jugador, habilitar input en lugar de llamar a la IA
+            if (retries >= 3) {
+                const moves = game.moves();
+                const fallback = moves[Math.floor(Math.random() * moves.length)];
+                game.move(fallback);
+                await board.setPosition(game.fen(), true);
+                updateMetrics();
+                const isW = game.turn() !== 'w';
+                const entry = document.createElement('div');
+                entry.className = `log-item ${isW ? 'white' : 'black'}`;
+                entry.innerHTML = `<div class="log-move">${fallback} <span style="color:#f59e0b;font-size:0.65rem">(aleatorio)</span></div>`;
+                (isW ? ui.logsW : ui.logsB).prepend(entry);
+                setTimeout(() => triggerAI(), 1000);
+                return;
+            }
             if (config.modo === 'jugador-cpu' && game.turn() === config.playerColor) {
                 habilitarInputJugador();
                 return;
             }
             const isW = game.turn() === 'w';
-            const settings = isW ? config.w : config.b;
+            const hist = game.history();
+            const ultimosMovs = hist.slice(-6).join(" ");
+            const infoHist = ultimosMovs ? `Últimos movimientos: ${ultimosMovs}.` : "Inicio del juego.";
+            const color = isW ? "Blancas" : "Negras";
+            const advertencia = movInvalido
+                ? `\nADVERTENCIA: tu movimiento anterior "${movInvalido}" no es válido. Elige otro movimiento legal.`
+                : "";
 
+            if (config.proveedor === 'local') {
+                try {
+                    const sideConf = isW ? config.w : config.b;
+                    const thinkingOn = sideConf.thinking;
+                    const engine = llmEngines[sideConf.model];
+                    const legalMoves = game.moves();
+                    const ejemplo = legalMoves[0];
+                    const messages = [
+                        { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
+                        { role: 'user', content: `${thinkingOn ? '' : '/no_thinking\n'}FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
+                    ];
+                    // Crear entrada viva en el log
+                    const liveEntry = document.createElement('div');
+                    liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
+                    liveEntry.innerHTML = `
+                        <div class="log-move" style="opacity:0.4">pensando...</div>
+                        <details class="think-details" style="display:none">
+                            <summary>▸ Ver razonamiento</summary>
+                            <div class="think-text"></div>
+                        </details>
+                        <div class="log-text"></div>`;
+                    (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
+                    const liveMoveEl = liveEntry.querySelector('.log-move');
+                    const liveThinkDet = liveEntry.querySelector('.think-details');
+                    const liveThinkEl = liveEntry.querySelector('.think-text');
+                    const liveTextEl = liveEntry.querySelector('.log-text');
+
+                    const stream = await engine.chat.completions.create({
+                        messages,
+                        max_tokens: thinkingOn ? 3000 : 1024,
+                        temperature: 0.7,
+                        stream: true,
+                    });
+
+                    let thinkContent = '', responseText = '', buf = '', inThink = false, finishReason = null;
+                    for await (const chunk of stream) {
+                        if (chunk.choices[0]?.finish_reason) finishReason = chunk.choices[0].finish_reason;
+                        buf += chunk.choices[0]?.delta?.content || '';
+                        while (buf.length > 0) {
+                            if (inThink) {
+                                const e = buf.indexOf('</think>');
+                                if (e !== -1) {
+                                    thinkContent += buf.slice(0, e);
+                                    inThink = false;
+                                    buf = buf.slice(e + 8);
+                                } else {
+                                    thinkContent += buf.slice(0, -8);
+                                    buf = buf.slice(-8);
+                                    break;
+                                }
+                            } else {
+                                const s = buf.indexOf('<think>');
+                                if (s !== -1) { responseText += buf.slice(0, s); inThink = true; buf = buf.slice(s + 7); }
+                                else { responseText += buf; buf = ''; }
+                            }
+                        }
+                        if (thinkContent) {
+                            liveThinkDet.style.display = '';
+                            liveThinkEl.textContent = thinkContent + (inThink ? '▌' : '');
+                        }
+                        liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + (!inThink && responseText ? '▌' : '');
+                    }
+
+                    const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
+                    const moveStr = moveMatch ? moveMatch[1].trim() : '';
+
+                    liveMoveEl.style.opacity = '';
+                    liveMoveEl.textContent = moveStr || '??';
+                    liveThinkEl.textContent = thinkContent.trim();
+                    liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
+
+                    if (game.move(moveStr, { sloppy: true })) {
+                        await board.setPosition(game.fen(), true);
+                        updateMetrics();
+                        setTimeout(() => triggerAI(), 1000);
+                    } else {
+                        liveEntry.remove();
+                        setTimeout(() => triggerAI(moveStr || "desconocido", retries + 1), 1500);
+                    }
+                } catch (e) {
+                    setTimeout(() => triggerAI(null, retries + 1), 3000);
+                }
+                return;
+            }
+
+            if (config.proveedor === 'ollama') {
+                try {
+                    const sideConf = isW ? config.w : config.b;
+                    const thinkingOn = sideConf.thinking;
+                    const ollamaModel = sideConf.model;
+                    const legalMoves = game.moves();
+                    const ejemplo = legalMoves[0];
+                    const messages = [
+                        { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
+                        { role: 'user', content: `${thinkingOn ? '' : '/no_thinking\n'}FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
+                    ];
+
+                    const liveEntry = document.createElement('div');
+                    liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
+                    liveEntry.innerHTML = `
+                        <div class="log-move" style="opacity:0.4">pensando...</div>
+                        <details class="think-details" style="display:none">
+                            <summary>▸ Ver razonamiento</summary>
+                            <div class="think-text"></div>
+                        </details>
+                        <div class="log-text"></div>`;
+                    (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
+                    const liveMoveEl = liveEntry.querySelector('.log-move');
+                    const liveThinkDet = liveEntry.querySelector('.think-details');
+                    const liveThinkEl = liveEntry.querySelector('.think-text');
+                    const liveTextEl = liveEntry.querySelector('.log-text');
+
+                    // Endpoint nativo /api/chat — devuelve message.thinking y message.content por separado
+                    const res = await fetch(`${config.ollamaUrl}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model: ollamaModel,
+                            messages,
+                            stream: true,
+                            options: { temperature: 0.7 },
+                            ...(thinkingOn && { think: true })
+                        })
+                    });
+
+                    if (!res.ok) throw new Error(`Ollama HTTP ${res.status}`);
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let ndjsonBuffer = '';
+                    let thinkContent = '', responseText = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        ndjsonBuffer += decoder.decode(value, { stream: true });
+                        const lines = ndjsonBuffer.split('\n');
+                        ndjsonBuffer = lines.pop();
+                        for (const line of lines) {
+                            if (!line.trim()) continue;
+                            try {
+                                const json = JSON.parse(line);
+                                const msg = json.message || {};
+                                // thinking llega en msg.thinking, respuesta en msg.content
+                                if (msg.thinking) {
+                                    thinkContent += msg.thinking;
+                                    liveThinkDet.style.display = '';
+                                    liveThinkEl.textContent = thinkContent + '▌';
+                                }
+                                if (msg.content) {
+                                    responseText += msg.content;
+                                    liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
+                                }
+                                if (json.done) break;
+                            } catch { continue; }
+                        }
+                    }
+
+                    const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
+                    const moveStr = moveMatch ? moveMatch[1].trim() : '';
+
+                    liveMoveEl.style.opacity = '';
+                    liveMoveEl.textContent = moveStr || '??';
+                    liveThinkEl.textContent = thinkContent.trim();
+                    liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
+                    if (!thinkContent.trim()) liveThinkDet.style.display = 'none';
+
+                    if (game.move(moveStr, { sloppy: true })) {
+                        await board.setPosition(game.fen(), true);
+                        updateMetrics();
+                        setTimeout(() => triggerAI(), 1000);
+                    } else {
+                        liveEntry.remove();
+                        setTimeout(() => triggerAI(moveStr || "desconocido", retries + 1), 1500);
+                    }
+                } catch (e) {
+                    setTimeout(() => triggerAI(null, retries + 1), 3000);
+                }
+                return;
+            }
+
+            const settings = isW ? config.w : config.b;
             const model = genAI.getGenerativeModel({
                 model: settings.model,
                 generationConfig: {
@@ -591,15 +1307,23 @@
                 }
             });
 
-            try {
-                const hist = game.history();
-                const ultimosMovs = hist.slice(-6).join(" ");
-                const infoHist = ultimosMovs ? `Últimos movimientos: ${ultimosMovs}.` : "Inicio del juego.";
-                const color = isW ? "Blancas" : "Negras";
+            // Crear entrada viva en el log para Gemini
+            const liveEntry = document.createElement('div');
+            liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
+            liveEntry.innerHTML = `
+                <div class="log-move" style="opacity:0.4">pensando...</div>
+                <details class="think-details" style="display:none">
+                    <summary>▸ Ver razonamiento</summary>
+                    <div class="think-text"></div>
+                </details>
+                <div class="log-text"></div>`;
+            (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
+            const liveMoveElG = liveEntry.querySelector('.log-move');
+            const liveThinkDetG = liveEntry.querySelector('.think-details');
+            const liveThinkElG = liveEntry.querySelector('.think-text');
+            const liveTextElG = liveEntry.querySelector('.log-text');
 
-                const advertencia = movInvalido
-                    ? `\nADVERTENCIA: tu movimiento anterior "${movInvalido}" no es válido. Elige otro movimiento legal.`
-                    : "";
+            try {
                 const prompt = `Eres un Gran Maestro de ajedrez jugando con ${color}.
 FEN actual: ${game.fen()}
 ${infoHist}
@@ -611,28 +1335,49 @@ Analiza la posición siguiendo estos criterios:
 4. Elige el movimiento que maximice tu ventaja.
 
 Escribe el movimiento elegido en notación algebraica inglesa (N=caballo, B=alfil, Q=dama, R=torre, K=rey) entre dobles llaves: {{movimiento}}.${advertencia}`;
-                const result = await model.generateContent(prompt);
 
-                const usage = result.response.usageMetadata;
-                if (usage && usage.totalTokenCount) {
+                const result = await model.generateContentStream(prompt);
+                let thinkContent = '', responseText = '';
+
+                for await (const chunk of result.stream) {
+                    for (const part of chunk.candidates?.[0]?.content?.parts || []) {
+                        if (part.thought) {
+                            thinkContent += part.text || '';
+                            liveThinkDetG.style.display = '';
+                            liveThinkElG.textContent = thinkContent + '▌';
+                        } else {
+                            responseText += part.text || '';
+                            liveTextElG.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
+                        }
+                    }
+                }
+
+                const finalResponse = await result.response;
+                const usage = finalResponse.usageMetadata;
+                if (usage?.totalTokenCount) {
                     const side = isW ? 'w' : 'b';
                     tokenUsage[side] += usage.totalTokenCount;
                     document.getElementById(`token-${side}`).innerText = `Tokens: ${tokenUsage[side].toLocaleString()}`;
                 }
 
-                const text = result.response.text();
-                const moveMatch = text.match(/\{\{([^\}]+)\}\}/);
+                const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
                 const moveStr = moveMatch ? moveMatch[1].trim() : "";
 
+                liveMoveElG.style.opacity = '';
+                liveMoveElG.textContent = moveStr || '??';
+                liveThinkElG.textContent = thinkContent.trim();
+                liveTextElG.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
+                if (!thinkContent.trim()) liveThinkDetG.style.display = 'none';
+
                 if (game.move(moveStr, { sloppy: true })) {
-                    logReasoning(isW, text.replace(/\{\{.*?\}\}/g, ""), moveStr);
                     await board.setPosition(game.fen(), true);
                     updateMetrics();
                     setTimeout(() => triggerAI(), 1000);
                 } else {
-                    setTimeout(() => triggerAI(moveStr || "desconocido"), 1500);
+                    liveEntry.remove();
+                    setTimeout(() => triggerAI(moveStr || "desconocido", retries + 1), 1500);
                 }
-            } catch (e) { setTimeout(() => triggerAI(), 3000); }
+            } catch (e) { liveEntry.remove(); setTimeout(() => triggerAI(null, retries + 1), 3000); }
         }
 
         function updateMetrics() {
