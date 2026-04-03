@@ -1201,6 +1201,61 @@
             }
         });
 
+        const OLLAMA_CLOUD_MODELS = [
+            { value: 'qwen3.5:cloud',      label: 'qwen3.5:cloud' },
+            { value: 'kimi-k2.5:cloud',    label: 'kimi-k2.5:cloud' },
+            { value: 'glm-5:cloud',        label: 'glm-5:cloud' },
+            { value: 'minimax-m2.5:cloud', label: 'minimax-m2.5:cloud' },
+        ];
+        const OLLAMA_LOCAL_RECOMMENDED = [
+            { value: 'qwen3.5',      label: 'qwen3.5' },
+            { value: 'qwen3.5:27b',  label: 'qwen3.5:27b' },
+            { value: 'qwen3.5:35b',  label: 'qwen3.5:35b' },
+            { value: 'glm-4.7-flash',label: 'glm-4.7-flash' },
+        ];
+
+        function buildOllamaOptions(selects, localInstalled) {
+            selects.forEach(sel => {
+                sel.innerHTML = '';
+
+                if (OLLAMA_CLOUD_MODELS.length) {
+                    const grpCloud = document.createElement('optgroup');
+                    grpCloud.label = '☁ Nube (sin descarga)';
+                    OLLAMA_CLOUD_MODELS.forEach(m => {
+                        const o = document.createElement('option');
+                        o.value = m.value; o.textContent = m.label;
+                        grpCloud.appendChild(o);
+                    });
+                    sel.appendChild(grpCloud);
+                }
+
+                if (localInstalled.length) {
+                    const grpInst = document.createElement('optgroup');
+                    grpInst.label = '✔ Instalados localmente';
+                    localInstalled.forEach(name => {
+                        const o = document.createElement('option');
+                        o.value = name; o.textContent = name;
+                        grpInst.appendChild(o);
+                    });
+                    sel.appendChild(grpInst);
+                }
+
+                const localRec = OLLAMA_LOCAL_RECOMMENDED.filter(
+                    m => !localInstalled.includes(m.value)
+                );
+                if (localRec.length) {
+                    const grpRec = document.createElement('optgroup');
+                    grpRec.label = '⬇ Locales recomendados (se descargan al usar)';
+                    localRec.forEach(m => {
+                        const o = document.createElement('option');
+                        o.value = m.value; o.textContent = m.label;
+                        grpRec.appendChild(o);
+                    });
+                    sel.appendChild(grpRec);
+                }
+            });
+        }
+
         let ollamaFetchTimer = null;
         async function fetchOllamaModels() {
             const statusEl = document.getElementById('ollama-status');
@@ -1208,11 +1263,9 @@
             const whiteSelect = document.getElementById('ollama-white-model');
             const blackSelect = document.getElementById('ollama-black-model');
 
-            // Estado inicial de "cargando" / "sin conexión"
             statusEl.style.color = 'var(--text-dim)';
             statusEl.innerText = 'CONECTANDO...';
-            whiteSelect.innerHTML = '<option value="">---------</option>';
-            blackSelect.innerHTML = '<option value="">---------</option>';
+            buildOllamaOptions([whiteSelect, blackSelect], []);
             document.getElementById('ollama-error-alert').style.display = 'none';
 
             try {
@@ -1223,35 +1276,18 @@
                 statusEl.style.color = 'var(--text-dim)';
 
                 const data = await resp.json();
-
-                if (data.models && data.models.length > 0) {
-                    whiteSelect.innerHTML = '';
-                    blackSelect.innerHTML = '';
-
-                    data.models.forEach(m => {
-                        const opt1 = document.createElement('option');
-                        opt1.value = m.name;
-                        opt1.textContent = m.name;
-                        whiteSelect.appendChild(opt1);
-
-                        const opt2 = document.createElement('option');
-                        opt2.value = m.name;
-                        opt2.textContent = m.name;
-                        blackSelect.appendChild(opt2);
-                    });
-                } else {
-                    whiteSelect.innerHTML = '<option value="">Sin modelos instalados</option>';
-                    blackSelect.innerHTML = '<option value="">Sin modelos instalados</option>';
-                }
+                const installed = (data.models || []).map(m => m.name);
+                buildOllamaOptions([whiteSelect, blackSelect], installed);
             } catch (e) {
-                statusEl.textContent = 'ERROR';
+                statusEl.textContent = 'SIN CONEXIÓN LOCAL';
                 statusEl.style.color = 'var(--text-dim)';
+                // Aún mostramos los modelos cloud aunque no haya Ollama local
+                buildOllamaOptions([whiteSelect, blackSelect], []);
 
                 const errAlert = document.getElementById('ollama-error-alert');
                 errAlert.style.display = 'block';
-                // Reiniciar animación para que "entre" visualmente cada vez
                 errAlert.style.animation = 'none';
-                errAlert.offsetHeight; // Forzar reflujo
+                errAlert.offsetHeight;
                 errAlert.style.animation = '';
 
                 console.error(e);
@@ -1304,7 +1340,8 @@
                     e.stopPropagation();
                     const rect = container.getBoundingClientRect();
                     const spaceBelow = window.innerHeight - rect.bottom;
-                    if (spaceBelow < 160) container.classList.add('open-up');
+                    const spaceAbove = rect.top;
+                    if (spaceBelow < spaceAbove) container.classList.add('open-up');
                     else container.classList.remove('open-up');
 
                     document.querySelectorAll('.custom-select').forEach(cs => {
