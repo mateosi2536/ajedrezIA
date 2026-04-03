@@ -247,6 +247,31 @@
             transform: translateY(0);
         }
 
+        .btn-simple {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            width: auto;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: none;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-simple:hover {
+            color: var(--text);
+            background: rgba(239, 68, 68, 0.15); /* rojizo suave */
+            border-color: rgba(239, 68, 68, 0.4);
+            transform: translateY(-1px);
+            box-shadow: none;
+            filter: none;
+        }
+
         .setup-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1118,6 +1143,7 @@
                     <span class="metric-label">Puntos</span>
                 </div>
             </div>
+            <button class="btn-simple" onclick="window.location.reload()" style="align-self: center; margin-top: 5px;">Terminar Juego</button>
         </div>
 
         <!-- Negras -->
