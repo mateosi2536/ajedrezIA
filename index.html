@@ -674,13 +674,17 @@
                     style="display:block; font-size:0.65rem; color: var(--text-dim); margin-bottom:8px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Proveedor
                     de IA</label>
                 <select id="ai-provider" onchange="toggleProveedor()">
-                    <option value="gemini">Gemini (API Key)</option>
-                    <option value="local">Local (WebLLM, sin API Key)</option>
-                    <option value="ollama">Ollama (servidor local)</option>
+                    <option value="gpt">OpenAI</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="local">WebLLM</option>
+                    <option value="ollama">Ollama</option>
                 </select>
             </div>
 
-            <div id="gemini-creds"><input type="password" id="api-key" placeholder="Pega tu API Key aquí..." /></div>
+            <div id="gpt-creds"><input type="password" id="gpt-api-key"
+                    placeholder="Pega tu API Key de OpenAI aquí..." /></div>
+            <div id="gemini-creds" style="display:none;"><input type="password" id="api-key"
+                    placeholder="Pega tu API Key aquí..." /></div>
             <div id="ollama-creds" style="display:none; text-align: left; margin-bottom: 20px;">
                 <label
                     style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL
@@ -710,7 +714,47 @@
                     </select>
                 </div>
             </div>
-            <div id="gemini-section">
+            <div id="gpt-section">
+                <div class="setup-grid">
+                    <div class="setup-group" id="gpt-white-config">
+                        <label>Modelo Blancas</label>
+                        <select id="gpt-white-model">
+                            <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
+                            <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
+                            <option value="gpt-5.4">GPT-5.4</option>
+                            <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
+                        </select>
+                        <label>Razonamiento (Blancas)</label>
+                        <select id="gpt-white-think">
+                            <option value="none">Ninguno</option>
+                            <option value="minimal">Mínimo</option>
+                            <option value="low">Bajo</option>
+                            <option value="medium" selected>Medio</option>
+                            <option value="high">Alto</option>
+                            <option value="xhigh">Extremo</option>
+                        </select>
+                    </div>
+                    <div class="setup-group" id="gpt-black-config">
+                        <label>Modelo Negras</label>
+                        <select id="gpt-black-model">
+                            <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
+                            <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
+                            <option value="gpt-5.4">GPT-5.4</option>
+                            <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
+                        </select>
+                        <label>Razonamiento (Negras)</label>
+                        <select id="gpt-black-think">
+                            <option value="none">Ninguno</option>
+                            <option value="minimal">Mínimo</option>
+                            <option value="low">Bajo</option>
+                            <option value="medium" selected>Medio</option>
+                            <option value="high">Alto</option>
+                            <option value="xhigh">Extremo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div id="gemini-section" style="display:none;">
                 <div class="setup-grid">
                     <div class="setup-group" id="white-config">
                         <label>Modelo Blancas</label>
@@ -793,8 +837,22 @@
         </div>
 
         <div class="info-panel" id="info-panel">
+            <!-- GPT Alerts -->
+            <div id="alerts-gpt">
+                <div class="alert-item">
+                    <b>Familia GPT-5.4</b>
+                    Los nuevos modelos admiten exploración iterativa. Dependiendo del nivel de esfuerzo, la respuesta
+                    puede tardar en generarse.
+                </div>
+                <div class="alert-item">
+                    <b>Razonamiento Extremo</b>
+                    El uso de niveles de esfuerzo 'Extremo (xhigh)' podría incrementar significativamente el uso de
+                    tokens y añadir latencia de deliberación.
+                </div>
+            </div>
+
             <!-- Gemini Alerts -->
-            <div id="alerts-gemini">
+            <div id="alerts-gemini" style="display:none;">
                 <div class="alert-item">
                     <b>Privacidad Garantizada</b>
                     Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún
@@ -921,14 +979,16 @@
     <script>
         function toggleProveedor() {
             const val = document.getElementById('ai-provider').value;
-            ['gemini', 'local', 'ollama'].forEach(p => {
+            ['gpt', 'gemini', 'local', 'ollama'].forEach(p => {
                 const creds = document.getElementById(`${p}-creds`);
                 if (creds) creds.style.display = val === p ? 'block' : 'none';
-                document.getElementById(`${p}-section`).style.display = val === p ? 'block' : 'none';
-                document.getElementById(`alerts-${p}`).style.display = val === p ? 'block' : 'none';
+                const section = document.getElementById(`${p}-section`);
+                if (section) section.style.display = val === p ? 'block' : 'none';
+                const alerts = document.getElementById(`alerts-${p}`);
+                if (alerts) alerts.style.display = val === p ? 'block' : 'none';
             });
             const card = document.querySelector('.setup-card'), info = document.getElementById('info-panel');
-            const heights = { gemini: '652.6px', local: '551.6px', ollama: '620.2px' };
+            const heights = { gpt: '652.6px', gemini: '652.6px', local: '551.6px', ollama: '620.2px' };
             card.style.height = info.style.height = heights[val] || '652.6px';
             if (val === 'ollama') fetchOllamaModels();
             toggleModo();
@@ -1094,7 +1154,7 @@
             document.getElementById('alerts-local-optim').style.display = document.getElementById('alerts-ollama-optim').style.display = esCpuVsCpu ? 'block' : 'none';
             document.getElementById('player-color-group').style.display = !esCpuVsCpu ? 'block' : 'none';
             const hideW = !esCpuVsCpu && playerColor === 'w', hideB = !esCpuVsCpu && playerColor === 'b';
-            const prefix = prov === 'local' ? 'local-' : (prov === 'ollama' ? 'ollama-' : '');
+            const prefix = prov === 'local' ? 'local-' : (prov === 'ollama' ? 'ollama-' : (prov === 'gpt' ? 'gpt-' : ''));
             if (document.getElementById(`${prefix}white-config`)) {
                 document.getElementById(`${prefix}white-config`).style.display = hideW ? 'none' : 'block';
                 document.getElementById(`${prefix}black-config`).style.display = hideB ? 'none' : 'block';
@@ -1118,7 +1178,7 @@
             apiKey: "",
             modo: "cpu-cpu",
             playerColor: "w",
-            proveedor: "gemini",
+            proveedor: "gpt",
             ollamaUrl: "",
             w: { model: "", think: "", thinking: false },
             b: { model: "", think: "", thinking: false }
@@ -1140,7 +1200,14 @@
             config.modo = document.getElementById('game-mode').value;
             config.playerColor = document.getElementById('player-color').value;
 
-            if (config.proveedor === 'gemini') {
+            if (config.proveedor === 'gpt') {
+                config.apiKey = document.getElementById('gpt-api-key').value.trim();
+                if (!config.apiKey) return alert("Falta API Key de OpenAI");
+                config.w.model = document.getElementById('gpt-white-model').value;
+                config.w.think = document.getElementById('gpt-white-think').value;
+                config.b.model = document.getElementById('gpt-black-model').value;
+                config.b.think = document.getElementById('gpt-black-think').value;
+            } else if (config.proveedor === 'gemini') {
                 config.apiKey = document.getElementById('api-key').value.trim();
                 if (!config.apiKey) return alert("Falta API Key");
                 genAI = new GoogleGenerativeAI(config.apiKey);
@@ -1319,7 +1386,60 @@
             let thinkContent = '', responseText = '';
 
             try {
-                if (config.proveedor === 'local') {
+                if (config.proveedor === 'gpt') {
+                    const sideConf = isW ? config.w : config.b;
+
+                    const reqBody = { model: sideConf.model, input: messages, stream: true };
+
+                    if (sideConf.think !== 'none') {
+                        reqBody.reasoning = {
+                            effort: sideConf.think,
+                            summary: "detailed"
+                        };
+                    } else {
+                        reqBody.temperature = 0.7;
+                    }
+
+                    const res = await fetch('https://api.openai.com/v1/responses', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${config.apiKey}`
+                        },
+                        body: JSON.stringify(reqBody)
+                    });
+                    if (!res.ok) throw new Error(`GPT Error ${res.status}`);
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let buffer = '';
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // conservar incompleto
+                        for (const line of lines) {
+                            if (line.trim() === '' || line.trim() === 'data: [DONE]') continue;
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const event = JSON.parse(line.substring(6));
+
+                                    if (event.type === "response.reasoning_summary_text.delta" && event.delta) {
+                                        thinkContent += event.delta;
+                                        liveThinkDet.style.display = '';
+                                        liveThinkEl.textContent = thinkContent + '▌';
+                                    }
+
+                                    if (event.type === "response.output_text.delta" && event.delta) {
+                                        responseText += event.delta;
+                                        liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
+                                    }
+                                } catch (e) { }
+                            }
+                        }
+                    }
+                } else if (config.proveedor === 'local') {
                     const sideConf = isW ? config.w : config.b;
                     const stream = await llmEngines[sideConf.model].chat.completions.create({
                         messages, max_tokens: sideConf.thinking ? 3000 : 1024, temperature: 0.7, stream: true,
