@@ -657,6 +657,138 @@
         .hidden {
             display: none !important;
         }
+
+        /* --- RESPONSIVIDAD MÓVIL / TABLET --- */
+        @media (max-width: 1024px) {
+            body {
+                overflow-y: auto;
+                align-items: flex-start;
+                padding: 1rem;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                height: auto;
+                min-height: calc(100vh - 2rem);
+                overflow: visible;
+                padding: 1.5rem;
+            }
+
+            .center-section {
+                order: -1;
+                width: 100%;
+                max-width: 600px;
+                margin: 0 auto;
+                height: auto;
+            }
+
+            .side-panel {
+                height: auto;
+            }
+
+            .reasoning-box {
+                min-height: 250px;
+                max-height: 40vh;
+            }
+
+            #setup-overlay {
+                flex-direction: column;
+                justify-content: flex-start;
+                overflow-y: auto;
+                padding: 1.5rem;
+            }
+
+            .setup-card {
+                width: 100%;
+                height: auto !important;
+            }
+
+            .info-panel {
+                width: 100%;
+                height: auto !important;
+                overflow: visible;
+                justify-content: flex-start;
+                align-items: center;
+            }
+
+            .alert-item {
+                width: 100%;
+                max-width: 550px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                width: 100vw;
+                border-radius: 0;
+                min-height: 100vh;
+                padding: 1rem;
+            }
+
+            .setup-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.8rem;
+            }
+
+            .setup-card {
+                padding: 1.5rem 1rem;
+                border-radius: 16px;
+                width: 95%;
+                margin: 0 auto;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            .inline-field {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+            }
+            .inline-field .custom-select {
+                margin-bottom: 0px;
+                flex: 1;
+            }
+            .inline-field .setup-checkbox-label {
+                margin-top: 0px;
+                padding-left: 0;
+            }
+
+            .inline-field-selects {
+                display: flex;
+                gap: 12px;
+                width: 100%;
+            }
+            .inline-field-selects .select-col {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .setup-card h1 {
+                font-size: 1.8rem;
+            }
+
+            #setup-overlay {
+                padding: 1rem 0;
+            }
+
+            .game-metrics {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 0.5rem;
+            }
+
+            .metric-card {
+                padding: 0.4rem;
+            }
+
+            .metric-val {
+                font-size: 0.95rem;
+            }
+        }
     </style>
 </head>
 
@@ -698,7 +830,7 @@
                     </div>
                 </div>
             </div>
-            <div class="setup-grid" style="grid-template-columns:1fr 1fr; margin-bottom: 20px;">
+            <div class="setup-grid" style="margin-bottom: 20px;">
                 <div class="setup-group">
                     <label>Modo de Juego</label>
                     <select id="game-mode" onchange="toggleModo()">
@@ -717,74 +849,98 @@
             <div id="gpt-section">
                 <div class="setup-grid">
                     <div class="setup-group" id="gpt-white-config">
-                        <label>Modelo Blancas</label>
-                        <select id="gpt-white-model">
-                            <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
-                            <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
-                            <option value="gpt-5.4">GPT-5.4</option>
-                            <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
-                        </select>
-                        <label>Razonamiento (Blancas)</label>
-                        <select id="gpt-white-think">
-                            <option value="none">Ninguno</option>
-                            <option value="minimal">Mínimo</option>
-                            <option value="low">Bajo</option>
-                            <option value="medium" selected>Medio</option>
-                            <option value="high">Alto</option>
-                            <option value="xhigh">Extremo</option>
-                        </select>
+                        <div class="inline-field-selects">
+                            <div class="select-col">
+                                <label>Modelo Blancas</label>
+                                <select id="gpt-white-model">
+                                    <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
+                                    <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
+                                    <option value="gpt-5.4">GPT-5.4</option>
+                                    <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
+                                </select>
+                            </div>
+                            <div class="select-col">
+                                <label>Razonamiento</label>
+                                <select id="gpt-white-think">
+                                    <option value="none">Ninguno</option>
+                                    <option value="minimal">Mínimo</option>
+                                    <option value="low">Bajo</option>
+                                    <option value="medium" selected>Medio</option>
+                                    <option value="high">Alto</option>
+                                    <option value="xhigh">Extremo</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="setup-group" id="gpt-black-config">
-                        <label>Modelo Negras</label>
-                        <select id="gpt-black-model">
-                            <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
-                            <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
-                            <option value="gpt-5.4">GPT-5.4</option>
-                            <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
-                        </select>
-                        <label>Razonamiento (Negras)</label>
-                        <select id="gpt-black-think">
-                            <option value="none">Ninguno</option>
-                            <option value="minimal">Mínimo</option>
-                            <option value="low">Bajo</option>
-                            <option value="medium" selected>Medio</option>
-                            <option value="high">Alto</option>
-                            <option value="xhigh">Extremo</option>
-                        </select>
+                        <div class="inline-field-selects">
+                            <div class="select-col">
+                                <label>Modelo Negras</label>
+                                <select id="gpt-black-model">
+                                    <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
+                                    <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
+                                    <option value="gpt-5.4">GPT-5.4</option>
+                                    <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
+                                </select>
+                            </div>
+                            <div class="select-col">
+                                <label>Razonamiento</label>
+                                <select id="gpt-black-think">
+                                    <option value="none">Ninguno</option>
+                                    <option value="minimal">Mínimo</option>
+                                    <option value="low">Bajo</option>
+                                    <option value="medium" selected>Medio</option>
+                                    <option value="high">Alto</option>
+                                    <option value="xhigh">Extremo</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             <div id="gemini-section" style="display:none;">
                 <div class="setup-grid">
                     <div class="setup-group" id="white-config">
-                        <label>Modelo Blancas</label>
-                        <select id="white-model">
-                            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-                            <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
-                            <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
-                        </select>
-                        <label>Razonamiento (Blancas)</label>
-                        <select id="white-think">
-                            <option value="MINIMAL">MÍNIMO</option>
-                            <option value="LOW">BAJO</option>
-                            <option value="MEDIUM" selected>MEDIO</option>
-                            <option value="HIGH">ALTO</option>
-                        </select>
+                        <div class="inline-field-selects">
+                            <div class="select-col">
+                                <label>Modelo Blancas</label>
+                                <select id="white-model">
+                                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
+                                    <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
+                                </select>
+                            </div>
+                            <div class="select-col">
+                                <label>Razonamiento</label>
+                                <select id="white-think">
+                                    <option value="MINIMAL">MÍNIMO</option>
+                                    <option value="LOW">BAJO</option>
+                                    <option value="MEDIUM" selected>MEDIO</option>
+                                    <option value="HIGH">ALTO</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                     <div class="setup-group" id="black-config">
-                        <label>Modelo Negras</label>
-                        <select id="black-model">
-                            <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-                            <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
-                            <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
-                        </select>
-                        <label>Razonamiento (Negras)</label>
-                        <select id="black-think">
-                            <option value="MINIMAL">MÍNIMO</option>
-                            <option value="LOW">BAJO</option>
-                            <option value="MEDIUM" selected>MEDIO</option>
-                            <option value="HIGH">ALTO</option>
-                        </select>
+                        <div class="inline-field-selects">
+                            <div class="select-col">
+                                <label>Modelo Negras</label>
+                                <select id="black-model">
+                                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
+                                    <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
+                                </select>
+                            </div>
+                            <div class="select-col">
+                                <label>Razonamiento</label>
+                                <select id="black-think">
+                                    <option value="MINIMAL">MÍNIMO</option>
+                                    <option value="LOW">BAJO</option>
+                                    <option value="MEDIUM" selected>MEDIO</option>
+                                    <option value="HIGH">ALTO</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -792,23 +948,27 @@
                 <div class="setup-grid">
                     <div class="setup-group" id="local-white-config">
                         <label>Modelo Blancas</label>
-                        <select id="local-white-model">
-                            <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
-                            <option value="Qwen3-1.7B-q4f16_1-MLC" selected>Qwen3 1.7B (~900 MB)</option>
-                            <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B (~2.3 GB)</option>
-                        </select>
-                        <label class="setup-checkbox-label"><input type="checkbox"
-                                id="local-white-thinking"><span>Razonar</span></label>
+                        <div class="inline-field">
+                            <select id="local-white-model">
+                                <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
+                                <option value="Qwen3-1.7B-q4f16_1-MLC" selected>Qwen3 1.7B (~900 MB)</option>
+                                <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B (~2.3 GB)</option>
+                            </select>
+                            <label class="setup-checkbox-label"><input type="checkbox"
+                                    id="local-white-thinking"><span>Razonar</span></label>
+                        </div>
                     </div>
                     <div class="setup-group" id="local-black-config">
                         <label>Modelo Negras</label>
-                        <select id="local-black-model">
-                            <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
-                            <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B (~900 MB)</option>
-                            <option value="Qwen3-4B-q4f16_1-MLC" selected>Qwen3 4B (~2.3 GB)</option>
-                        </select>
-                        <label class="setup-checkbox-label"><input type="checkbox"
-                                id="local-black-thinking"><span>Razonar</span></label>
+                        <div class="inline-field">
+                            <select id="local-black-model">
+                                <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
+                                <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B (~900 MB)</option>
+                                <option value="Qwen3-4B-q4f16_1-MLC" selected>Qwen3 4B (~2.3 GB)</option>
+                            </select>
+                            <label class="setup-checkbox-label"><input type="checkbox"
+                                    id="local-black-thinking"><span>Razonar</span></label>
+                        </div>
                     </div>
                 </div>
                 <div id="load-progress"
@@ -820,15 +980,19 @@
                     <div class="setup-grid">
                         <div class="setup-group" id="ollama-white-config">
                             <label>Modelo Blancas</label>
-                            <select id="ollama-white-model" style="margin-bottom:8px;"></select>
-                            <label class="setup-checkbox-label"><input type="checkbox"
-                                    id="ollama-white-thinking"><span>Razonar</span></label>
+                            <div class="inline-field">
+                                <select id="ollama-white-model" style="margin-bottom:8px;"></select>
+                                <label class="setup-checkbox-label"><input type="checkbox"
+                                        id="ollama-white-thinking"><span>Razonar</span></label>
+                            </div>
                         </div>
                         <div class="setup-group" id="ollama-black-config">
                             <label>Modelo Negras</label>
-                            <select id="ollama-black-model" style="margin-bottom:8px;"></select>
-                            <label class="setup-checkbox-label"><input type="checkbox"
-                                    id="ollama-black-thinking"><span>Razonar</span></label>
+                            <div class="inline-field">
+                                <select id="ollama-black-model" style="margin-bottom:8px;"></select>
+                                <label class="setup-checkbox-label"><input type="checkbox"
+                                        id="ollama-black-thinking"><span>Razonar</span></label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -841,7 +1005,8 @@
             <div id="alerts-gpt">
                 <div class="alert-item">
                     <b>Privacidad Garantizada</b>
-                    Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún servidor externo.
+                    Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún
+                    servidor externo.
                 </div>
                 <div class="alert-item">
                     <b>Razonamiento Extremo</b>
@@ -988,10 +1153,22 @@
             });
             const card = document.querySelector('.setup-card'), info = document.getElementById('info-panel');
             const heights = { gpt: '652.6px', gemini: '652.6px', local: '551.6px', ollama: '620.2px' };
-            card.style.height = info.style.height = heights[val] || '652.6px';
+            if (window.innerWidth > 1024) {
+                card.style.height = heights[val] || '652.6px';
+                info.style.height = heights[val] || '652.6px';
+            } else {
+                card.style.height = 'auto';
+                info.style.height = 'auto';
+            }
             if (val === 'ollama') fetchOllamaModels();
             toggleModo();
         }
+
+        window.addEventListener('resize', () => {
+            if (document.getElementById('setup-overlay').style.display !== 'none') {
+                toggleProveedor();
+            }
+        });
 
         let ollamaFetchTimer = null;
         async function fetchOllamaModels() {
