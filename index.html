@@ -79,10 +79,12 @@
             backdrop-filter: blur(15px);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             z-index: 1000;
             gap: 2rem;
             padding: 2rem;
+            padding-top: max(2rem, calc((100vh - 600px) / 2));
+            overflow-y: auto;
         }
 
         .setup-card {
@@ -90,26 +92,21 @@
             padding: 2.5rem;
             border-radius: 28px;
             text-align: center;
-            width: 550px;
+            width: 860px;
             border: 1px solid var(--glass-border);
             box-shadow: 0 25px 70px -10px rgba(0, 0, 0, 0.8);
             position: relative;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            /* Altura base (Gemini): 652.6px (571 + 81.6) */
-            height: 652.6px;
+            transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* --- PANEL DE INFO (Simplificado) --- */
+        /* --- PANEL DE INFO (Refinado) --- */
         .info-panel {
-            width: 400px;
-            height: 652.6px;
+            width: 380px;
             background: none;
             border: none;
             display: flex;
             flex-direction: column;
-            gap: 1.2rem;
-            transition: all 0.4s ease;
             overflow-y: auto;
             scrollbar-width: none;
             justify-content: flex-start;
@@ -122,17 +119,36 @@
         .alert-item {
             background: rgba(30, 41, 59, 0.4);
             backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            padding: 1.2rem;
+            /* Borde transparente para evitar que quede una línea fantasma */
+            border: 1px solid transparent; 
             border-radius: 20px;
             font-size: 0.85rem;
             line-height: 1.5;
             color: var(--text-dim);
-            animation: slideIn 0.3s ease-out;
+            box-shadow: none; /* Sin sombra al inicio */
+            overflow: hidden;
+
+            /* Estado inicial: Colapsado y a la derecha */
+            max-height: 0;
+            padding: 0 1.2rem;
+            margin-top: 0;
+            opacity: 0;
+            transform: translateX(40px);
+
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .alert-item.show {
+            max-height: 300px;
+            padding: 1.2rem;
+            opacity: 1;
+            transform: translateX(0);
+            border-color: var(--glass-border); /* Revelamos el borde */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
-        .alert-item+.alert-item {
+        /* Solo empuja hacia abajo si es un elemento visible seguido de OTRO visible */
+        .alert-item.show ~ .alert-item.show {
             margin-top: 1rem;
         }
 
@@ -151,21 +167,22 @@
             font-size: 0.75rem;
             margin-top: 10px;
             color: var(--text-dim);
-            /* Unificado con el texto del form */
             border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(30px) scale(0.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
+        .code-block::-webkit-scrollbar {
+            height: 4px;
         }
+
+        .code-block::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
 
         .setup-card::before {
             content: '';
@@ -289,6 +306,23 @@
             margin-bottom: 6px;
             text-transform: uppercase;
             font-weight: 600;
+        }
+
+        .inline-field {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .inline-field .custom-select {
+            margin-bottom: 0 !important;
+            flex: 1;
+        }
+
+        .inline-field .setup-checkbox-label {
+            margin-top: 0 !important;
+            padding-left: 0;
         }
 
         /* --- CUSTOM SELECT (PATRÓN REUTILIZADO) --- */
@@ -416,7 +450,7 @@
             font-weight: 600;
         }
 
-        .setup-group .setup-checkbox-label {
+        .setup-checkbox-label {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -431,6 +465,7 @@
             padding-left: 6px;
             transition: color 0.3s ease;
             line-height: normal;
+            white-space: nowrap;
         }
 
         .setup-checkbox-label:hover {
@@ -770,22 +805,6 @@
                 overflow: visible !important;
             }
 
-            .inline-field {
-                display: flex;
-                gap: 12px;
-                align-items: center;
-            }
-
-            .inline-field .custom-select {
-                margin-bottom: 0px;
-                flex: 1;
-            }
-
-            .inline-field .setup-checkbox-label {
-                margin-top: 0px;
-                padding-left: 0;
-            }
-
             .inline-field-selects {
                 display: flex;
                 gap: 12px;
@@ -818,6 +837,40 @@
                 font-size: 0.95rem;
             }
         }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            margin-bottom: 20px;
+            align-items: start;
+        }
+
+        .player-col {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .col-header {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 6px 0;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+
+        .col-white,
+        .col-black {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 
@@ -830,58 +883,46 @@
             <h1>Ajedrez Analítico</h1>
             <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Configura la partida</p>
 
-            <div style="text-align: left; margin-bottom: 20px;">
-                <label
-                    style="display:block; font-size:0.65rem; color: var(--text-dim); margin-bottom:8px; text-transform:uppercase; font-weight:600; letter-spacing:0.05em;">Proveedor
-                    de IA</label>
-                <select id="ai-provider" onchange="toggleProveedor()">
-                    <option value="gpt">OpenAI</option>
-                    <option value="gemini">Gemini</option>
-                    <option value="local">WebLLM</option>
-                    <option value="ollama">Ollama</option>
-                </select>
-            </div>
+            <div class="players-grid">
+                <!-- WHITE -->
+                <div class="player-col">
+                    <div class="col-header col-white">♔ Blancas</div>
 
-            <div id="gpt-creds"><input type="password" id="gpt-api-key"
-                    placeholder="Pega tu API Key de OpenAI aquí..." /></div>
-            <div id="gemini-creds" style="display:none;"><input type="password" id="api-key"
-                    placeholder="Pega tu API Key aquí..." /></div>
-            <div id="ollama-creds" style="display:none; text-align: left; margin-bottom: 20px;">
-                <label
-                    style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL
-                    de Ollama</label>
-                <div
-                    style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <input type="text" id="ollama-url" value="http://localhost:11434"
-                        placeholder="http://localhost:11434" style="margin-bottom: 0;" />
-                    <div id="ollama-status"
-                        style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: center;">
+                    <div style="text-align:left; margin-bottom:14px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Proveedor</label>
+                        <select id="w-provider" onchange="toggleSide('w')">
+                            <option value="humano">Humano</option>
+                            <option value="gpt" selected>OpenAI</option>
+                            <option value="gemini">Gemini</option>
+                            <option value="ollama">Ollama</option>
+                            <option value="local">WebLLM</option>
+                        </select>
                     </div>
-                </div>
-            </div>
-            <div class="setup-grid" style="margin-bottom: 20px;">
-                <div class="setup-group">
-                    <label>Modo de Juego</label>
-                    <select id="game-mode" onchange="toggleModo()">
-                        <option value="cpu-cpu">CPU vs CPU</option>
-                        <option value="jugador-cpu">Jugador vs CPU</option>
-                    </select>
-                </div>
-                <div class="setup-group" id="player-color-group" style="display:none;">
-                    <label>Juegas con</label>
-                    <select id="player-color">
-                        <option value="w">Blancas</option>
-                        <option value="b">Negras</option>
-                    </select>
-                </div>
-            </div>
-            <div id="gpt-section">
-                <div class="setup-grid">
-                    <div class="setup-group" id="gpt-white-config">
+
+                    <div id="w-gpt-creds"><input type="password" id="w-gpt-key" placeholder="API Key de OpenAI..." />
+                    </div>
+                    <div id="w-gemini-creds" style="display:none;"><input type="password" id="w-gemini-key"
+                            placeholder="API Key de Gemini..." /></div>
+                    <div id="w-ollama-creds" style="display:none; margin-bottom:14px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:5px;">URL
+                            de Ollama</label>
+                        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                            <input type="text" id="w-ollama-url" value="http://localhost:11434"
+                                style="margin-bottom:0;" />
+                            <div id="w-ollama-status"
+                                style="font-size:0.65rem;font-weight:700;text-transform:uppercase;white-space:nowrap;min-width:80px;text-align:center;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="w-gpt-section">
                         <div class="inline-field-selects">
                             <div class="select-col">
-                                <label>Modelo Blancas</label>
-                                <select id="gpt-white-model">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <select id="w-gpt-model">
                                     <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
                                     <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
                                     <option value="gpt-5.4">GPT-5.4</option>
@@ -889,8 +930,9 @@
                                 </select>
                             </div>
                             <div class="select-col">
-                                <label>Razonamiento</label>
-                                <select id="gpt-white-think">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <select id="w-gpt-think">
                                     <option value="none">Ninguno</option>
                                     <option value="minimal">Mínimo</option>
                                     <option value="low">Bajo</option>
@@ -901,47 +943,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="setup-group" id="gpt-black-config">
+
+                    <div id="w-gemini-section" style="display:none;">
                         <div class="inline-field-selects">
                             <div class="select-col">
-                                <label>Modelo Negras</label>
-                                <select id="gpt-black-model">
-                                    <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
-                                    <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
-                                    <option value="gpt-5.4">GPT-5.4</option>
-                                    <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
-                                </select>
-                            </div>
-                            <div class="select-col">
-                                <label>Razonamiento</label>
-                                <select id="gpt-black-think">
-                                    <option value="none">Ninguno</option>
-                                    <option value="minimal">Mínimo</option>
-                                    <option value="low">Bajo</option>
-                                    <option value="medium" selected>Medio</option>
-                                    <option value="high">Alto</option>
-                                    <option value="xhigh">Extremo</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="gemini-section" style="display:none;">
-                <div class="setup-grid">
-                    <div class="setup-group" id="white-config">
-                        <div class="inline-field-selects">
-                            <div class="select-col">
-                                <label>Modelo Blancas</label>
-                                <select id="white-model">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <select id="w-gemini-model">
                                     <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
                                     <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
                                     <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
                                 </select>
                             </div>
                             <div class="select-col">
-                                <label>Razonamiento</label>
-                                <select id="white-think">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <select id="w-gemini-think">
                                     <option value="MINIMAL">MÍNIMO</option>
                                     <option value="LOW">BAJO</option>
                                     <option value="MEDIUM" selected>MEDIO</option>
@@ -950,158 +967,165 @@
                             </div>
                         </div>
                     </div>
-                    <div class="setup-group" id="black-config">
-                        <div class="inline-field-selects">
-                            <div class="select-col">
-                                <label>Modelo Negras</label>
-                                <select id="black-model">
-                                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
-                                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
-                                    <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
-                                </select>
-                            </div>
-                            <div class="select-col">
-                                <label>Razonamiento</label>
-                                <select id="black-think">
-                                    <option value="MINIMAL">MÍNIMO</option>
-                                    <option value="LOW">BAJO</option>
-                                    <option value="MEDIUM" selected>MEDIO</option>
-                                    <option value="HIGH">ALTO</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="local-section" style="display:none; margin-bottom: 15px;">
-                <div class="setup-grid">
-                    <div class="setup-group" id="local-white-config">
-                        <label>Modelo Blancas</label>
+
+                    <div id="w-local-section" style="display:none; margin-bottom:10px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
                         <div class="inline-field">
-                            <select id="local-white-model">
+                            <select id="w-local-model">
                                 <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
                                 <option value="Qwen3-1.7B-q4f16_1-MLC" selected>Qwen3 1.7B (~900 MB)</option>
                                 <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B (~2.3 GB)</option>
                             </select>
                             <label class="setup-checkbox-label"><input type="checkbox"
-                                    id="local-white-thinking"><span>Razonar</span></label>
+                                    id="w-local-thinking"><span>Razonar</span></label>
                         </div>
                     </div>
-                    <div class="setup-group" id="local-black-config">
-                        <label>Modelo Negras</label>
+
+                    <div id="w-ollama-section" style="display:none; margin-bottom:10px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
                         <div class="inline-field">
-                            <select id="local-black-model">
+                            <select id="w-ollama-model"></select>
+                            <label class="setup-checkbox-label"><input type="checkbox"
+                                    id="w-ollama-thinking"><span>Razonar</span></label>
+                        </div>
+                    </div>
+
+                    <div id="w-humano-section"
+                        style="display:none; padding:20px; border-radius:16px; background:rgba(255,255,255,0.02); border:1px dashed var(--glass-border); text-align:center; min-height:80px; display:flex; align-items:center; justify-content:center;">
+                        <p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0; font-style:italic; line-height:1.4;">
+                            "El ajedrez es la lucha contra el error."<br>
+                            <span style="font-size:0.7rem; opacity:0.6; font-style:normal; text-transform:uppercase; letter-spacing:0.05rem; margin-top:5px; display:block;">— Johannes Zukertort</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- BLACK -->
+                <div class="player-col">
+                    <div class="col-header col-black">♟ Negras</div>
+
+                    <div style="text-align:left; margin-bottom:14px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Proveedor</label>
+                        <select id="b-provider" onchange="toggleSide('b')">
+                            <option value="humano">Humano</option>
+                            <option value="gpt" selected>OpenAI</option>
+                            <option value="gemini">Gemini</option>
+                            <option value="ollama">Ollama</option>
+                            <option value="local">WebLLM</option>
+                        </select>
+                    </div>
+
+                    <div id="b-gpt-creds"><input type="password" id="b-gpt-key" placeholder="API Key de OpenAI..." />
+                    </div>
+                    <div id="b-gemini-creds" style="display:none;"><input type="password" id="b-gemini-key"
+                            placeholder="API Key de Gemini..." /></div>
+                    <div id="b-ollama-creds" style="display:none; margin-bottom:14px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:5px;">URL
+                            de Ollama</label>
+                        <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+                            <input type="text" id="b-ollama-url" value="http://localhost:11434"
+                                style="margin-bottom:0;" />
+                            <div id="b-ollama-status"
+                                style="font-size:0.65rem;font-weight:700;text-transform:uppercase;white-space:nowrap;min-width:80px;text-align:center;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="b-gpt-section">
+                        <div class="inline-field-selects">
+                            <div class="select-col">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <select id="b-gpt-model">
+                                    <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
+                                    <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
+                                    <option value="gpt-5.4">GPT-5.4</option>
+                                    <option value="gpt-5.4-pro">GPT-5.4 Pro</option>
+                                </select>
+                            </div>
+                            <div class="select-col">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <select id="b-gpt-think">
+                                    <option value="none">Ninguno</option>
+                                    <option value="minimal">Mínimo</option>
+                                    <option value="low">Bajo</option>
+                                    <option value="medium" selected>Medio</option>
+                                    <option value="high">Alto</option>
+                                    <option value="xhigh">Extremo</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="b-gemini-section" style="display:none;">
+                        <div class="inline-field-selects">
+                            <div class="select-col">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <select id="b-gemini-model">
+                                    <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
+                                    <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
+                                    <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
+                                </select>
+                            </div>
+                            <div class="select-col">
+                                <label
+                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <select id="b-gemini-think">
+                                    <option value="MINIMAL">MÍNIMO</option>
+                                    <option value="LOW">BAJO</option>
+                                    <option value="MEDIUM" selected>MEDIO</option>
+                                    <option value="HIGH">ALTO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="b-local-section" style="display:none; margin-bottom:10px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                        <div class="inline-field">
+                            <select id="b-local-model">
                                 <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
                                 <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B (~900 MB)</option>
                                 <option value="Qwen3-4B-q4f16_1-MLC" selected>Qwen3 4B (~2.3 GB)</option>
                             </select>
                             <label class="setup-checkbox-label"><input type="checkbox"
-                                    id="local-black-thinking"><span>Razonar</span></label>
+                                    id="b-local-thinking"><span>Razonar</span></label>
                         </div>
                     </div>
-                </div>
-                <div id="load-progress"
-                    style="display:none; font-size:0.8rem; color: #f59e0b; text-align:center; margin-top: 4px; padding: 6px; background: rgba(0,0,0,0.3); border-radius:6px;">
+
+                    <div id="b-ollama-section" style="display:none; margin-bottom:10px;">
+                        <label
+                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                        <div class="inline-field">
+                            <select id="b-ollama-model"></select>
+                            <label class="setup-checkbox-label"><input type="checkbox"
+                                    id="b-ollama-thinking"><span>Razonar</span></label>
+                        </div>
+                    </div>
+
+                    <div id="b-humano-section"
+                        style="display:none; padding:20px; border-radius:16px; background:rgba(255,255,255,0.02); border:1px dashed var(--glass-border); text-align:center; min-height:80px; display:flex; align-items:center; justify-content:center;">
+                        <p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0; font-style:italic; line-height:1.4;">
+                            "Toda la confianza que tengo se debe a mi capacidad de ver el tablero."<br>
+                            <span style="font-size:0.7rem; opacity:0.6; font-style:normal; text-transform:uppercase; letter-spacing:0.05rem; margin-top:5px; display:block;">— Bobby Fischer</span>
+                        </p>
+                    </div>
                 </div>
             </div>
-            <div id="ollama-section" style="display:none; margin-bottom: 15px; text-align: left;">
-                <div id="ollama-model-group">
-                    <div class="setup-grid">
-                        <div class="setup-group" id="ollama-white-config">
-                            <label>Modelo Blancas</label>
-                            <div class="inline-field">
-                                <select id="ollama-white-model" style="margin-bottom:8px;"></select>
-                                <label class="setup-checkbox-label"><input type="checkbox"
-                                        id="ollama-white-thinking"><span>Razonar</span></label>
-                            </div>
-                        </div>
-                        <div class="setup-group" id="ollama-black-config">
-                            <label>Modelo Negras</label>
-                            <div class="inline-field">
-                                <select id="ollama-black-model" style="margin-bottom:8px;"></select>
-                                <label class="setup-checkbox-label"><input type="checkbox"
-                                        id="ollama-black-thinking"><span>Razonar</span></label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+            <div id="load-progress"
+                style="display:none; font-size:0.8rem; color:#f59e0b; text-align:center; margin-bottom:12px; padding:6px; background:rgba(0,0,0,0.3); border-radius:6px;">
             </div>
             <button id="start-btn">Comenzar Duelo</button>
         </div>
 
-        <div class="info-panel" id="info-panel">
-            <!-- GPT Alerts -->
-            <div id="alerts-gpt">
-                <div class="alert-item">
-                    <b>Privacidad Garantizada</b>
-                    Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún
-                    servidor externo.
-                </div>
-                <div class="alert-item">
-                    <b>Razonamiento Extremo</b>
-                    El uso de niveles de esfuerzo 'Extremo (xhigh)' podría incrementar significativamente el uso de
-                    tokens y añadir latencia de deliberación.
-                </div>
-            </div>
-
-            <!-- Gemini Alerts -->
-            <div id="alerts-gemini" style="display:none;">
-                <div class="alert-item">
-                    <b>Privacidad Garantizada</b>
-                    Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún
-                    servidor externo.
-                </div>
-                <div class="alert-item">
-                    <b>Control de Gastos</b>
-                    Se recomienda fijar un límite de uso en tu consola de Google Cloud para evitar que bucles infinitos
-                    en el razonamiento generen costes inesperados.
-                </div>
-            </div>
-
-            <!-- Local Alerts -->
-            <div id="alerts-local" style="display:none;">
-                <div class="alert-item">
-                    <b>Tecnología Experimental</b>
-                    El uso de modelos LLM directamente en el navegador (WebLLM) es una tecnología en desarrollo. La
-                    eficiencia será menor que la de modelos nativos.
-                </div>
-                <div class="alert-item">
-                    <b>Complejidad del Ajedrez</b>
-                    Jugar ajedrez es una tarea compleja para un LLM pequeño. Los modelos menos inteligentes podrían
-                    realizar movimientos ilegales o incoherentes.
-                </div>
-                <div id="alerts-local-optim" class="alert-item" style="display: none;">
-                    <b>Optimización de Recursos</b>
-                    Se recomienda usar el mismo modelo para ambos jugadores. Esto permitirá que tu sistema reutilice la
-                    misma instancia cargada en memoria, reduciendo el consumo de RAM/VRAM y mejorando drásticamente el
-                    rendimiento del duelo.
-                </div>
-            </div>
-
-            <!-- Ollama Alerts -->
-            <div id="alerts-ollama" style="display:none;">
-                <div class="alert-item">
-                    <b>Servicio Local Requerido</b>
-                    Asegúrate de que Ollama esté ejecutándose en tu PC antes de intentar conectar.
-                </div>
-                <div class="alert-item">
-                    <b>Configuración de Acceso (CORS)</b>
-                    Para permitir la conexión, configura esta variable de entorno y reinicia Ollama:
-                    <div class="code-block">OLLAMA_ORIGINS=https://mateosi2536.github.io</div>
-                </div>
-                <div id="alerts-ollama-optim" class="alert-item" style="display: none;">
-                    <b>Duelo Optimizado</b>
-                    Para un rendimiento óptimo, selecciona el mismo modelo de Ollama para blancas y negras. De este
-                    modo, el servidor no tendrá que intercambiar modelos en memoria en cada turno ("model swapping"), lo
-                    que hará la partida mucho más fluida.
-                </div>
-                <div id="ollama-error-alert" class="alert-item" style="display: none;">
-                    <b>Error de Conexión</b>
-                    No se puede contactar con Ollama. Verifica que el servidor esté activo y que la variable CORS sea
-                    correcta.
-                </div>
-            </div>
-        </div>
+        <div class="info-panel" id="info-panel"></div>
     </div>
 
     <!-- INTERFAZ PRINCIPAL -->
@@ -1172,239 +1196,287 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
     <script>
-        function toggleProveedor() {
-            const val = document.getElementById('ai-provider').value;
-            ['gpt', 'gemini', 'local', 'ollama'].forEach(p => {
-                const creds = document.getElementById(`${p}-creds`);
-                if (creds) creds.style.display = val === p ? 'block' : 'none';
-                const section = document.getElementById(`${p}-section`);
-                if (section) section.style.display = val === p ? 'block' : 'none';
-                const alerts = document.getElementById(`alerts-${p}`);
-                if (alerts) alerts.style.display = val === p ? 'block' : 'none';
+        function toggleSide(side) {
+            const card = document.querySelector('.setup-card');
+            // Capturar altura de la tarjeta solamente
+            const cardSnap = (window.innerWidth > 1024) ? card.offsetHeight : null;
+
+            const val = document.getElementById(`${side}-provider`).value;
+            ['gpt', 'gemini', 'local', 'ollama', 'humano'].forEach(p => {
+                const creds = document.getElementById(`${side}-${p}-creds`);
+                if (creds) creds.style.display = (val === p) ? 'block' : 'none';
+                const section = document.getElementById(`${side}-${p}-section`);
+                if (section) {
+                    section.style.display = (val === p) ? (p === 'humano' ? 'flex' : 'block') : 'none';
+                }
             });
-            const card = document.querySelector('.setup-card'), info = document.getElementById('info-panel');
-            const heights = { gpt: '652.6px', gemini: '652.6px', local: '551.6px', ollama: '620.2px' };
-            if (window.innerWidth > 1024) {
-                card.style.height = heights[val] || '652.6px';
-                info.style.height = heights[val] || '652.6px';
-            } else {
+            if (val === 'ollama') fetchOllamaModelsSide(side);
+
+            // 1. Sincronizar alertas (CSS se encarga de su altura)
+            updateAlerts();
+
+            // 2. Animar solo la tarjeta izquierda
+            updateCardHeight(cardSnap);
+        }
+
+        function animateHeight(el, fromH, toH) {
+            el.style.transition = 'none';
+            el.style.height = fromH + 'px';
+            // Forzar reflow
+            el.offsetHeight; // eslint-disable-line no-unused-expressions
+            // Arrancar la transición hacia la nueva altura
+            el.style.transition = 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            el.style.height = toH + 'px';
+            // Al terminar, liberar a 'auto'
+            const handler = (e) => {
+                if (e.propertyName !== 'height') return;
+                el.style.height = 'auto';
+                el.removeEventListener('transitionend', handler);
+            };
+            el.addEventListener('transitionend', handler);
+        }
+
+        function updateCardHeight(cardSnap = null) {
+            const card = document.querySelector('.setup-card');
+
+            if (window.innerWidth <= 1024) {
+                card.style.transition = 'none';
                 card.style.height = 'auto';
-                info.style.height = 'auto';
+                return;
             }
-            if (val === 'ollama') fetchOllamaModels();
-            toggleModo();
+
+            // Medir la altura natural de la tarjeta (DOM actualizado)
+            card.style.transition = 'none';
+            card.style.height = 'auto';
+            const cardToH = card.offsetHeight;
+            const cardFromH = (cardSnap !== null) ? cardSnap : cardToH;
+
+            animateHeight(card, cardFromH, cardToH);
+        }
+
+        const ALERT_TEMPLATES = {
+            'api_privacy': `<b>Privacidad Garantizada</b>Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún servidor externo.`,
+            'api_cost': `<b>Control de Gastos</b>Se recomienda fijar un límite de uso en tu consola (OpenAI/Google Cloud) para evitar que bucles infinitos generen costes inesperados.`,
+            'local_exp': `<b>Tecnología Experimental</b>El uso de modelos LLM en el navegador es una tecnología en desarrollo. La eficiencia será menor.`,
+            'local_complex': `<b>Complejidad del Ajedrez</b>Jugar ajedrez es una tarea compleja. Modelos pequeños podrían realizar movimientos ilegales.`,
+            'local_optim': `<b>Optimización de Recursos</b>Ambos lados usan WebLLM con el mismo modelo — se reutilizará la misma instancia en memoria.`,
+            'ollama_req': `<b>Servicio Local Requerido</b>Asegúrate de que Ollama esté ejecutándose en tu PC antes de intentar conectar.`,
+            'ollama_cors': `<b>Configuración de Acceso (CORS)</b>Para permitir la conexión, configura esta variable y reinicia Ollama:<div class="code-block">OLLAMA_ORIGINS=https://mateosi2536.github.io</div>`,
+            'human_mode': `<b>Modo Humano Activo</b>Tendrás control total sobre las piezas de tu color. Arrástralas para realizar tus jugadas cuando sea tu turno.`
+        };
+
+        function updateAlerts() {
+            const wProv = document.getElementById('w-provider').value;
+            const bProv = document.getElementById('b-provider').value;
+            const provs = new Set([wProv, bProv]);
+
+            let desiredAlerts = [];
+
+            if (provs.has('gpt') || provs.has('gemini')) {
+                desiredAlerts.push('api_privacy', 'api_cost');
+            }
+            if (provs.has('humano')) {
+                desiredAlerts.push('human_mode');
+            }
+
+            if (provs.has('local')) {
+                desiredAlerts.push('local_exp', 'local_complex');
+                const wModel = document.getElementById('w-local-model')?.value;
+                const bModel = document.getElementById('b-local-model')?.value;
+                if (wProv === 'local' && bProv === 'local' && wModel === bModel) {
+                    desiredAlerts.push('local_optim');
+                }
+            }
+
+            if (provs.has('ollama')) {
+                desiredAlerts.push('ollama_req', 'ollama_cors');
+            }
+
+            const panel = document.getElementById('info-panel');
+            const currentNodes = Array.from(panel.querySelectorAll('.alert-item'));
+
+            // 1. Eliminar los que sobran (con lógica de rescate ante clics rápidos)
+            currentNodes.forEach(node => {
+                const id = node.dataset.id;
+                if (!desiredAlerts.includes(id)) {
+                    node.classList.remove('show');
+                    if (!node.dataset.removing) {
+                        node.dataset.removing = "true";
+                        setTimeout(() => {
+                            if (node.dataset.removing === "true") node.remove();
+                        }, 400);
+                    }
+                } else {
+                    // Si el usuario volvió a seleccionar la opción, cancelamos la eliminación
+                    node.classList.add('show');
+                    node.dataset.removing = "";
+                }
+            });
+
+            // 2. Sincronizar (añadir o reordenar)
+            desiredAlerts.forEach((id, index) => {
+                let alertEl = panel.querySelector(`.alert-item[data-id="${id}"]`);
+
+                if (!alertEl) {
+                    alertEl = document.createElement('div');
+                    alertEl.className = 'alert-item';
+                    alertEl.dataset.id = id;
+                    alertEl.innerHTML = ALERT_TEMPLATES[id];
+
+                    const referenceNode = panel.children[index];
+                    if (referenceNode) {
+                        panel.insertBefore(alertEl, referenceNode);
+                    } else {
+                        panel.appendChild(alertEl);
+                    }
+
+                    void alertEl.offsetWidth; // force reflow
+                    alertEl.classList.add('show');
+                } else {
+                    const referenceNode = panel.children[index];
+                    if (referenceNode !== alertEl) {
+                        panel.insertBefore(alertEl, referenceNode);
+                    }
+                }
+            });
         }
 
         window.addEventListener('resize', () => {
-            if (document.getElementById('setup-overlay').style.display !== 'none') {
-                toggleProveedor();
-            }
+            if (document.getElementById('setup-overlay').style.display !== 'none') updateCardHeight();
         });
 
         const OLLAMA_CLOUD_MODELS = [
-            { value: 'qwen3.5:cloud',      label: 'qwen3.5:cloud' },
-            { value: 'kimi-k2.5:cloud',    label: 'kimi-k2.5:cloud' },
-            { value: 'glm-5:cloud',        label: 'glm-5:cloud' },
+            { value: 'qwen3.5:cloud', label: 'qwen3.5:cloud' },
+            { value: 'kimi-k2.5:cloud', label: 'kimi-k2.5:cloud' },
+            { value: 'glm-5:cloud', label: 'glm-5:cloud' },
             { value: 'minimax-m2.5:cloud', label: 'minimax-m2.5:cloud' },
         ];
         const OLLAMA_LOCAL_RECOMMENDED = [
-            { value: 'qwen3.5',      label: 'qwen3.5' },
-            { value: 'qwen3.5:27b',  label: 'qwen3.5:27b' },
-            { value: 'qwen3.5:35b',  label: 'qwen3.5:35b' },
-            { value: 'glm-4.7-flash',label: 'glm-4.7-flash' },
+            { value: 'qwen3.5', label: 'qwen3.5' },
+            { value: 'qwen3.5:27b', label: 'qwen3.5:27b' },
+            { value: 'qwen3.5:35b', label: 'qwen3.5:35b' },
+            { value: 'glm-4.7-flash', label: 'glm-4.7-flash' },
         ];
 
         function buildOllamaOptions(selects, localInstalled) {
             selects.forEach(sel => {
                 sel.innerHTML = '';
-
                 if (OLLAMA_CLOUD_MODELS.length) {
                     const grpCloud = document.createElement('optgroup');
                     grpCloud.label = '☁ Nube (sin descarga)';
-                    OLLAMA_CLOUD_MODELS.forEach(m => {
-                        const o = document.createElement('option');
-                        o.value = m.value; o.textContent = m.label;
-                        grpCloud.appendChild(o);
-                    });
+                    OLLAMA_CLOUD_MODELS.forEach(m => { const o = document.createElement('option'); o.value = m.value; o.textContent = m.label; grpCloud.appendChild(o); });
                     sel.appendChild(grpCloud);
                 }
-
                 if (localInstalled.length) {
                     const grpInst = document.createElement('optgroup');
                     grpInst.label = '✔ Instalados localmente';
-                    localInstalled.forEach(name => {
-                        const o = document.createElement('option');
-                        o.value = name; o.textContent = name;
-                        grpInst.appendChild(o);
-                    });
+                    localInstalled.forEach(name => { const o = document.createElement('option'); o.value = name; o.textContent = name; grpInst.appendChild(o); });
                     sel.appendChild(grpInst);
                 }
-
-                const localRec = OLLAMA_LOCAL_RECOMMENDED.filter(
-                    m => !localInstalled.includes(m.value)
-                );
+                const localRec = OLLAMA_LOCAL_RECOMMENDED.filter(m => !localInstalled.includes(m.value));
                 if (localRec.length) {
                     const grpRec = document.createElement('optgroup');
                     grpRec.label = '⬇ Locales recomendados (se descargan al usar)';
-                    localRec.forEach(m => {
-                        const o = document.createElement('option');
-                        o.value = m.value; o.textContent = m.label;
-                        grpRec.appendChild(o);
-                    });
+                    localRec.forEach(m => { const o = document.createElement('option'); o.value = m.value; o.textContent = m.label; grpRec.appendChild(o); });
                     sel.appendChild(grpRec);
                 }
             });
         }
 
-        let ollamaFetchTimer = null;
-        async function fetchOllamaModels() {
-            const statusEl = document.getElementById('ollama-status');
-            const url = document.getElementById('ollama-url').value.trim().replace(/\/$/, '');
-            const whiteSelect = document.getElementById('ollama-white-model');
-            const blackSelect = document.getElementById('ollama-black-model');
-
+        const ollamaFetchTimers = { w: null, b: null };
+        async function fetchOllamaModelsSide(side) {
+            const statusEl = document.getElementById(`${side}-ollama-status`);
+            const urlEl = document.getElementById(`${side}-ollama-url`);
+            const select = document.getElementById(`${side}-ollama-model`);
+            if (!statusEl || !urlEl || !select) return;
+            const url = urlEl.value.trim().replace(/\/$/, '');
             statusEl.style.color = 'var(--text-dim)';
             statusEl.innerText = 'CONECTANDO...';
-            buildOllamaOptions([whiteSelect, blackSelect], []);
-            document.getElementById('ollama-error-alert').style.display = 'none';
-
+            buildOllamaOptions([select], []);
             try {
                 const resp = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(4000) });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
                 statusEl.textContent = 'CONECTADO';
                 statusEl.style.color = 'var(--text-dim)';
-
                 const data = await resp.json();
-                const installed = (data.models || []).map(m => m.name);
-                buildOllamaOptions([whiteSelect, blackSelect], installed);
+                buildOllamaOptions([select], (data.models || []).map(m => m.name));
             } catch (e) {
-                statusEl.textContent = 'SIN CONEXIÓN LOCAL';
+                statusEl.textContent = 'SIN CONEXIÓN';
                 statusEl.style.color = 'var(--text-dim)';
-                // Aún mostramos los modelos cloud aunque no haya Ollama local
-                buildOllamaOptions([whiteSelect, blackSelect], []);
-
-                const errAlert = document.getElementById('ollama-error-alert');
-                errAlert.style.display = 'block';
-                errAlert.style.animation = 'none';
-                errAlert.offsetHeight;
-                errAlert.style.animation = '';
-
+                buildOllamaOptions([select], []);
                 console.error(e);
             }
         }
 
-        // --- SISTEMA DE SELECTS PERSONALIZADOS ---
+        // --- CUSTOM SELECTS ---
         function updateCustomSelects() {
             document.querySelectorAll('select').forEach(select => {
                 if (select.classList.contains('select-hidden')) {
-                    // Ya está procesado, actualizar texto y opciones
                     const container = select.parentElement;
                     const trigger = container.querySelector('.custom-select-trigger');
                     const optionsContainer = container.querySelector('.custom-options');
-
                     trigger.innerText = select.options[select.selectedIndex]?.text || '';
-
                     optionsContainer.innerHTML = '';
                     Array.from(select.options).forEach((option, idx) => {
                         const optDiv = document.createElement('div');
                         optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
                         optDiv.innerText = option.text;
-                        optDiv.onclick = (e) => {
-                            e.stopPropagation();
-                            select.selectedIndex = idx;
-                            select.dispatchEvent(new Event('change'));
-                            container.classList.remove('active');
-                            updateCustomSelects();
-                        };
+                        optDiv.onclick = (e) => { e.stopPropagation(); select.selectedIndex = idx; select.dispatchEvent(new Event('change')); container.classList.remove('active'); updateCustomSelects(); };
                         optionsContainer.appendChild(optDiv);
                     });
                     return;
                 }
-
-                // Crear estructura personalizada
                 const container = document.createElement('div');
                 container.className = 'custom-select';
                 select.parentNode.insertBefore(container, select);
                 container.appendChild(select);
                 select.classList.add('select-hidden');
-
                 const trigger = document.createElement('div');
                 trigger.className = 'custom-select-trigger';
                 trigger.innerText = select.options[select.selectedIndex]?.text || '';
-
                 const optionsContainer = document.createElement('div');
                 optionsContainer.className = 'custom-options';
-
                 trigger.onclick = (e) => {
                     e.stopPropagation();
                     const rect = container.getBoundingClientRect();
-                    const spaceBelow = window.innerHeight - rect.bottom;
-                    const spaceAbove = rect.top;
-                    if (spaceBelow < spaceAbove) container.classList.add('open-up');
+                    if (window.innerHeight - rect.bottom < rect.top) container.classList.add('open-up');
                     else container.classList.remove('open-up');
-
-                    document.querySelectorAll('.custom-select').forEach(cs => {
-                        if (cs !== container) cs.classList.remove('active');
-                    });
+                    document.querySelectorAll('.custom-select').forEach(cs => { if (cs !== container) cs.classList.remove('active'); });
                     container.classList.toggle('active');
                 };
-
                 container.appendChild(trigger);
                 container.appendChild(optionsContainer);
-
-                // Actualizar opciones inicialmente
                 const refreshOptions = () => {
                     optionsContainer.innerHTML = '';
                     Array.from(select.options).forEach((option, idx) => {
                         const optDiv = document.createElement('div');
                         optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
                         optDiv.innerText = option.text;
-                        optDiv.onclick = (e) => {
-                            e.stopPropagation();
-                            select.selectedIndex = idx;
-                            select.dispatchEvent(new Event('change'));
-                            container.classList.remove('active');
-                            updateCustomSelects();
-                        };
+                        optDiv.onclick = (e) => { e.stopPropagation(); select.selectedIndex = idx; select.dispatchEvent(new Event('change')); container.classList.remove('active'); updateCustomSelects(); };
                         optionsContainer.appendChild(optDiv);
                     });
                     trigger.innerText = select.options[select.selectedIndex]?.text || '';
                 };
-
                 refreshOptions();
-
-                // Observar cambios internos (para Ollama que inyecta opciones)
-                const observer = new MutationObserver(refreshOptions);
-                observer.observe(select, { childList: true });
+                new MutationObserver(refreshOptions).observe(select, { childList: true });
             });
         }
 
-        // Cerrar al click afuera
-        window.addEventListener('click', () => {
-            document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('active'));
-        });
+        window.addEventListener('click', () => document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('active')));
 
         document.addEventListener('DOMContentLoaded', () => {
             updateCustomSelects();
-            document.getElementById('ollama-url').addEventListener('input', () => {
-                clearTimeout(ollamaFetchTimer);
-                ollamaFetchTimer = setTimeout(fetchOllamaModels, 600);
+            // Initial state: both sides default to gpt, show gpt sections
+            toggleSide('w');
+            toggleSide('b');
+            // Ollama URL listeners
+            ['w', 'b'].forEach(side => {
+                document.getElementById(`${side}-ollama-url`)?.addEventListener('input', () => {
+                    clearTimeout(ollamaFetchTimers[side]);
+                    ollamaFetchTimers[side] = setTimeout(() => fetchOllamaModelsSide(side), 600);
+                });
             });
         });
-        function toggleModo() {
-            const esCpuVsCpu = document.getElementById('game-mode').value === 'cpu-cpu';
-            const playerColor = document.getElementById('player-color').value, prov = document.getElementById('ai-provider').value;
-            document.getElementById('alerts-local-optim').style.display = document.getElementById('alerts-ollama-optim').style.display = esCpuVsCpu ? 'block' : 'none';
-            document.getElementById('player-color-group').style.display = !esCpuVsCpu ? 'block' : 'none';
-            const hideW = !esCpuVsCpu && playerColor === 'w', hideB = !esCpuVsCpu && playerColor === 'b';
-            const prefix = prov === 'local' ? 'local-' : (prov === 'ollama' ? 'ollama-' : (prov === 'gpt' ? 'gpt-' : ''));
-            if (document.getElementById(`${prefix}white-config`)) {
-                document.getElementById(`${prefix}white-config`).style.display = hideW ? 'none' : 'block';
-                document.getElementById(`${prefix}black-config`).style.display = hideB ? 'none' : 'block';
-            }
-        }
-        document.getElementById('player-color').addEventListener('change', toggleModo);
     </script>
     <script type="module">
         import { Chessboard, FEN, INPUT_EVENT_TYPE, COLOR } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/Chessboard.js";
@@ -1413,20 +1485,15 @@
 
         let game = new Chess();
         let board = null;
-        let genAI = null;
         let llmEngines = {};  // cache: modelId → engine
         let isPaused = false;
         let tokenUsage = { w: 0, b: 0 };
 
         const config = {
-            apiKey: "",
-            modo: "cpu-cpu",
-            playerColor: "w",
-            proveedor: "gpt",
-            ollamaUrl: "",
-            w: { model: "", think: "", thinking: false },
-            b: { model: "", think: "", thinking: false }
+            w: { proveedor: "gpt", apiKey: "", ollamaUrl: "", model: "", think: "", thinking: false },
+            b: { proveedor: "gpt", apiKey: "", ollamaUrl: "", model: "", think: "", thinking: false }
         };
+        let genAI_w = null, genAI_b = null;
 
         const ui = {
             setup: document.getElementById('setup-overlay'),
@@ -1440,35 +1507,61 @@
         };
 
         document.getElementById('start-btn').onclick = async () => {
-            config.proveedor = document.getElementById('ai-provider').value;
-            config.modo = document.getElementById('game-mode').value;
-            config.playerColor = document.getElementById('player-color').value;
+            const wProv = document.getElementById('w-provider').value;
+            const bProv = document.getElementById('b-provider').value;
+            if (wProv === 'humano' && bProv === 'humano') return alert("Al menos un lado debe ser CPU.");
 
-            if (config.proveedor === 'gpt') {
-                config.apiKey = document.getElementById('gpt-api-key').value.trim();
-                if (!config.apiKey) return alert("Falta API Key de OpenAI");
-                config.w.model = document.getElementById('gpt-white-model').value;
-                config.w.think = document.getElementById('gpt-white-think').value;
-                config.b.model = document.getElementById('gpt-black-model').value;
-                config.b.think = document.getElementById('gpt-black-think').value;
-            } else if (config.proveedor === 'gemini') {
-                config.apiKey = document.getElementById('api-key').value.trim();
-                if (!config.apiKey) return alert("Falta API Key");
-                genAI = new GoogleGenerativeAI(config.apiKey);
-                config.w.model = document.getElementById('white-model').value;
-                config.w.think = document.getElementById('white-think').value;
-                config.b.model = document.getElementById('black-model').value;
-                config.b.think = document.getElementById('black-think').value;
-            } else if (config.proveedor === 'local') {
-                config.w.model = document.getElementById('local-white-model').value;
-                config.b.model = document.getElementById('local-black-model').value;
-                config.w.thinking = document.getElementById('local-white-thinking').checked;
-                config.b.thinking = document.getElementById('local-black-thinking').checked;
-                const esJug = config.modo === 'jugador-cpu';
-                const modelsNeeded = [...new Set([
-                    (!esJug || config.playerColor !== 'w') ? config.w.model : null,
-                    (!esJug || config.playerColor !== 'b') ? config.b.model : null,
-                ].filter(Boolean))];
+            config.w.proveedor = wProv;
+            config.b.proveedor = bProv;
+
+            // Read white config
+            if (wProv === 'gpt') {
+                config.w.apiKey = document.getElementById('w-gpt-key').value.trim();
+                if (!config.w.apiKey) return alert("Falta API Key de OpenAI para Blancas.");
+                config.w.model = document.getElementById('w-gpt-model').value;
+                config.w.think = document.getElementById('w-gpt-think').value;
+            } else if (wProv === 'gemini') {
+                config.w.apiKey = document.getElementById('w-gemini-key').value.trim();
+                if (!config.w.apiKey) return alert("Falta API Key de Gemini para Blancas.");
+                genAI_w = new GoogleGenerativeAI(config.w.apiKey);
+                config.w.model = document.getElementById('w-gemini-model').value;
+                config.w.think = document.getElementById('w-gemini-think').value;
+            } else if (wProv === 'local') {
+                config.w.model = document.getElementById('w-local-model').value;
+                config.w.thinking = document.getElementById('w-local-thinking').checked;
+            } else if (wProv === 'ollama') {
+                config.w.model = document.getElementById('w-ollama-model').value;
+                if (!config.w.model) return alert("Conecta con Ollama y selecciona un modelo para Blancas.");
+                config.w.ollamaUrl = document.getElementById('w-ollama-url').value.trim().replace(/\/$/, '');
+                config.w.thinking = document.getElementById('w-ollama-thinking').checked;
+            }
+
+            // Read black config
+            if (bProv === 'gpt') {
+                config.b.apiKey = document.getElementById('b-gpt-key').value.trim();
+                if (!config.b.apiKey) return alert("Falta API Key de OpenAI para Negras.");
+                config.b.model = document.getElementById('b-gpt-model').value;
+                config.b.think = document.getElementById('b-gpt-think').value;
+            } else if (bProv === 'gemini') {
+                config.b.apiKey = document.getElementById('b-gemini-key').value.trim();
+                if (!config.b.apiKey) return alert("Falta API Key de Gemini para Negras.");
+                genAI_b = new GoogleGenerativeAI(config.b.apiKey);
+                config.b.model = document.getElementById('b-gemini-model').value;
+                config.b.think = document.getElementById('b-gemini-think').value;
+            } else if (bProv === 'local') {
+                config.b.model = document.getElementById('b-local-model').value;
+                config.b.thinking = document.getElementById('b-local-thinking').checked;
+            } else if (bProv === 'ollama') {
+                config.b.model = document.getElementById('b-ollama-model').value;
+                if (!config.b.model) return alert("Conecta con Ollama y selecciona un modelo para Negras.");
+                config.b.ollamaUrl = document.getElementById('b-ollama-url').value.trim().replace(/\/$/, '');
+                config.b.thinking = document.getElementById('b-ollama-thinking').checked;
+            }
+
+            // Load WebLLM models if needed
+            const localSides = ['w', 'b'].filter(s => config[s].proveedor === 'local');
+            if (localSides.length > 0) {
+                const modelsNeeded = [...new Set(localSides.map(s => config[s].model))];
                 const toLoad = modelsNeeded.filter(m => !llmEngines[m]);
                 if (toLoad.length > 0) {
                     const startBtn = document.getElementById('start-btn');
@@ -1481,9 +1574,7 @@
                         progress.style.color = '#f59e0b';
                         progress.innerText = 'Iniciando descarga...';
                         try {
-                            llmEngines[modelId] = await webllm.CreateMLCEngine(modelId, {
-                                initProgressCallback: p => { progress.innerText = p.text; }
-                            });
+                            llmEngines[modelId] = await webllm.CreateMLCEngine(modelId, { initProgressCallback: p => { progress.innerText = p.text; } });
                         } catch (err) {
                             console.error(err);
                             delete llmEngines[modelId];
@@ -1499,21 +1590,14 @@
                     startBtn.disabled = false;
                     startBtn.innerText = 'Comenzar Duelo';
                 }
-            } else if (config.proveedor === 'ollama') {
-                const wModel = document.getElementById('ollama-white-model').value;
-                const bModel = document.getElementById('ollama-black-model').value;
-                if (!wModel || !bModel) return alert("Conecta con Ollama y selecciona un modelo primero.");
-                config.ollamaUrl = document.getElementById('ollama-url').value.trim().replace(/\/$/, '');
-                config.w.model = wModel;
-                config.b.model = bModel;
-                config.w.thinking = document.getElementById('ollama-white-thinking').checked;
-                config.b.thinking = document.getElementById('ollama-black-thinking').checked;
             }
 
-            document.getElementById('name-w').innerText = `${config.w.model.replace('-preview', '')} ${config.w.think || ''}`.trim();
-            document.getElementById('name-b').innerText = `${config.b.model.replace('-preview', '')} ${config.b.think || ''}`.trim();
-            document.getElementById('tag-w').innerText = config.modo === 'jugador-cpu' ? (config.playerColor === 'w' ? 'Tú (Blancas)' : 'Blancas (CPU)') : 'Blancas (CPU)';
-            document.getElementById('tag-b').innerText = config.modo === 'jugador-cpu' ? (config.playerColor === 'b' ? 'Tú (Negras)' : 'Negras (CPU)') : 'Negras (CPU)';
+            // Set UI labels
+            const provLabel = (s) => config[s].proveedor === 'humano' ? 'Tú' : config[s].model.replace('-preview', '');
+            document.getElementById('name-w').innerText = provLabel('w');
+            document.getElementById('name-b').innerText = provLabel('b');
+            document.getElementById('tag-w').innerText = config.w.proveedor === 'humano' ? 'Blancas (Tú)' : 'Blancas (CPU)';
+            document.getElementById('tag-b').innerText = config.b.proveedor === 'humano' ? 'Negras (Tú)' : 'Negras (CPU)';
 
             ui.setup.style.display = "none";
             ui.main.classList.remove('hidden');
@@ -1534,12 +1618,7 @@
                 style: { cssClass: "default", pieces: { type: "svgSprite", file: "pieces/standard.svg", tileSize: 40 } }
             });
             updateMetrics();
-            // Si el jugador juega con blancas, empieza con su turno
-            if (config.modo === 'jugador-cpu' && config.playerColor === 'w') {
-                habilitarInputJugador();
-            } else {
-                triggerAI();
-            }
+            triggerAI();
         }
 
         function logReasoning(isW, thought, move) {
@@ -1551,22 +1630,19 @@
             (isW ? ui.logsW : ui.logsB).prepend(entry);
         }
 
-        function habilitarInputJugador() {
+        function habilitarInputJugador(color) {
             if (isPaused || game.game_over()) return;
-            const colorBoard = config.playerColor === 'w' ? COLOR.white : COLOR.black;
+            const colorBoard = color === 'w' ? COLOR.white : COLOR.black;
             ui.gameStatus.innerText = "Tu turno";
             ui.gameStatus.className = "metric-val status-playing";
             board.enableMoveInput((event) => {
-                if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
-                    return true;
-                }
+                if (event.type === INPUT_EVENT_TYPE.moveInputStarted) return true;
                 if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
                     const move = game.move({ from: event.squareFrom, to: event.squareTo, promotion: 'q' });
                     if (move) {
                         board.setPosition(game.fen(), true);
                         updateMetrics();
-                        const isW = config.playerColor === 'w';
-                        logReasoning(isW, "Movimiento del jugador.", move.san);
+                        logReasoning(color === 'w', "Movimiento del jugador.", move.san);
                         board.disableMoveInput();
                         ui.gameStatus.innerText = "CPU";
                         ui.gameStatus.className = "metric-val status-paused";
@@ -1597,11 +1673,9 @@
                 setTimeout(() => triggerAI(), 1000);
                 return;
             }
-            if (config.modo === 'jugador-cpu' && game.turn() === config.playerColor) {
-                habilitarInputJugador();
-                return;
-            }
             const isW = game.turn() === 'w';
+            const sideConf = isW ? config.w : config.b;
+            if (sideConf.proveedor === 'humano') { habilitarInputJugador(isW ? 'w' : 'b'); return; }
             const hist = game.history();
             const infoHist = hist.length ? `Últimos movimientos: ${hist.slice(-6).join(" ")}.` : "Inicio del juego.";
             const color = isW ? "Blancas" : "Negras";
@@ -1630,9 +1704,7 @@
             let thinkContent = '', responseText = '';
 
             try {
-                if (config.proveedor === 'gpt') {
-                    const sideConf = isW ? config.w : config.b;
-
+                if (sideConf.proveedor === 'gpt') {
                     const reqBody = { model: sideConf.model, input: messages, stream: true };
 
                     if (sideConf.think !== 'none') {
@@ -1648,7 +1720,7 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${config.apiKey}`
+                            'Authorization': `Bearer ${sideConf.apiKey}`
                         },
                         body: JSON.stringify(reqBody)
                     });
@@ -1683,8 +1755,7 @@
                             }
                         }
                     }
-                } else if (config.proveedor === 'local') {
-                    const sideConf = isW ? config.w : config.b;
+                } else if (sideConf.proveedor === 'local') {
                     const stream = await llmEngines[sideConf.model].chat.completions.create({
                         messages, max_tokens: sideConf.thinking ? 3000 : 1024, temperature: 0.7, stream: true,
                     });
@@ -1705,9 +1776,8 @@
                         if (thinkContent) { liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + (inThink ? '▌' : ''); }
                         liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + (!inThink && responseText ? '▌' : '');
                     }
-                } else if (config.proveedor === 'ollama') {
-                    const sideConf = isW ? config.w : config.b;
-                    const res = await fetch(`${config.ollamaUrl}/api/chat`, {
+                } else if (sideConf.proveedor === 'ollama') {
+                    const res = await fetch(`${sideConf.ollamaUrl}/api/chat`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ model: sideConf.model, messages, stream: true, options: { temperature: 0.7 }, ...(sideConf.thinking && { think: true }) })
                     });
@@ -1731,9 +1801,8 @@
                             } catch { continue; }
                         }
                     }
-                } else if (config.proveedor === 'gemini') {
-                    const sideConf = isW ? config.w : config.b;
-                    const model = genAI.getGenerativeModel({
+                } else if (sideConf.proveedor === 'gemini') {
+                    const model = (isW ? genAI_w : genAI_b).getGenerativeModel({
                         model: sideConf.model,
                         generationConfig: { thinkingConfig: { includeThoughts: true, thinkingLevel: sideConf.think } }
                     });
