@@ -143,6 +143,18 @@
             font-size: 0.95rem;
         }
 
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            margin-top: 10px;
+            color: var(--text-dim);
+            /* Unificado con el texto del form */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
         @keyframes slideIn {
             from {
                 opacity: 0;
@@ -177,8 +189,7 @@
             font-weight: 600;
         }
 
-        input[type="text"],
-        input[type="password"] {
+        input {
             width: 100%;
             padding: 12px;
             margin-bottom: 20px;
@@ -192,14 +203,12 @@
             outline: none;
         }
 
-        input[type="text"]:hover,
-        input[type="password"]:hover {
+        input:hover {
             background: rgba(30, 41, 59, 0.7);
             border-color: rgba(255, 255, 255, 0.2);
         }
 
-        input[type="text"]:focus,
-        input[type="password"]:focus {
+        input:focus {
             border-color: var(--accent-b);
             background: rgba(30, 41, 59, 1);
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
@@ -254,43 +263,6 @@
             margin-bottom: 6px;
             text-transform: uppercase;
             font-weight: 600;
-        }
-
-        /* --- PREMIUM RANGE SLIDER --- */
-        input[type=range] {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100%;
-            background: transparent;
-            margin-bottom: 15px;
-            cursor: pointer;
-        }
-
-        input[type=range]:focus {
-            outline: none;
-            box-shadow: none;
-        }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            height: 6px;
-            background: rgba(15, 23, 42, 0.8);
-            border-radius: 10px;
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 16px;
-            width: 16px;
-            border-radius: 50%;
-            background: var(--accent-b);
-            cursor: pointer;
-            margin-top: -6px;
-            border: none;
-            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        input[type=range]:hover::-webkit-slider-thumb {
-            transform: scale(1.1);
         }
 
         /* --- CUSTOM SELECT (PATRÓN REUTILIZADO) --- */
@@ -355,7 +327,6 @@
             backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: 14px;
-            overflow: hidden;
             z-index: 2000;
             display: none;
             flex-direction: column;
@@ -363,6 +334,29 @@
             transform: translateY(-10px);
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 180px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        .custom-options::-webkit-scrollbar {
+            width: 2px;
+        }
+
+        .custom-options::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .custom-select.open-up .custom-options {
+            top: auto;
+            bottom: calc(100% + 8px);
+            transform: translateY(10px);
+        }
+
+        .custom-select.open-up.active .custom-options {
+            transform: translateY(0);
         }
 
         .custom-select.active .custom-options {
@@ -710,36 +704,23 @@
 
             <div id="gemini-creds"><input type="password" id="api-key" placeholder="Pega tu API Key aquí..." /></div>
             <div id="ollama-creds" style="display:none; text-align: left; margin-bottom: 20px;">
-                <label
-                    style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL
-                    de Ollama</label>
-                <div
-                    style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <input type="text" id="ollama-url" value="http://localhost:11434"
-                        placeholder="http://localhost:11434" style="margin-bottom: 0;" />
-                    <div id="ollama-status"
-                        style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: center;">
-                    </div>
+                <label style="display:block; font-size:0.65rem; color: var(--text-dim); text-transform:uppercase; font-weight:600; letter-spacing:0.05em; margin-bottom:5px;">URL de Ollama</label>
+                <div style="display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <input type="text" id="ollama-url" value="http://localhost:11434" placeholder="http://localhost:11434" style="margin-bottom: 0;" />
+                    <div id="ollama-status" style="font-size:0.65rem; font-weight:700; text-transform:uppercase; white-space: nowrap; min-width: 90px; text-align: center;"></div>
                 </div>
             </div>
             <div class="setup-grid" style="grid-template-columns:1fr 1fr; margin-bottom: 20px;">
                 <div class="setup-group">
                     <label>Modo de Juego</label>
-                    <select id="game-mode" onchange="toggleModo()">
-                        <option value="cpu-cpu">CPU vs CPU</option>
-                        <option value="jugador-cpu">Jugador vs CPU</option>
-                    </select>
+                    <select id="game-mode" onchange="toggleModo()"><option value="cpu-cpu">CPU vs CPU</option><option value="jugador-cpu">Jugador vs CPU</option></select>
                 </div>
                 <div class="setup-group" id="player-color-group" style="display:none;">
                     <label>Juegas con</label>
-                    <select id="player-color">
-                        <option value="w">Blancas</option>
-                        <option value="b">Negras</option>
-                    </select>
+                    <select id="player-color"><option value="w">Blancas</option><option value="b">Negras</option></select>
                 </div>
             </div>
-            <div id="gemini-section">
-                <div class="setup-grid">
+            <div id="gemini-section"><div class="setup-grid">
                     <div class="setup-group" id="white-config">
                         <label>Modelo Blancas</label>
                         <select id="white-model">
@@ -747,10 +728,13 @@
                             <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
                             <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
                         </select>
-                        <label>Razonamiento (Blancas): <span id="white-think-val"
-                                style="color:var(--accent-b)">MEDIO</span></label>
-                        <input type="range" id="white-think" min="0" max="3" step="0.01" value="2"
-                            oninput="updateThinkLabel('white')" onpointerup="snapSlider('white')" ontouchend="snapSlider('white')">
+                        <label>Razonamiento (Blancas)</label>
+                        <select id="white-think">
+                            <option value="MINIMAL">MÍNIMO</option>
+                            <option value="LOW">BAJO</option>
+                            <option value="MEDIUM" selected>MEDIO</option>
+                            <option value="HIGH">ALTO</option>
+                        </select>
                     </div>
                     <div class="setup-group" id="black-config">
                         <label>Modelo Negras</label>
@@ -759,13 +743,15 @@
                             <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
                             <option value="gemini-3.1-flash-lite-preview">Gemini 3.1 Flash Lite</option>
                         </select>
-                        <label>Razonamiento (Negras): <span id="black-think-val"
-                                style="color:var(--accent-b)">MEDIO</span></label>
-                        <input type="range" id="black-think" min="0" max="3" step="0.01" value="2"
-                            oninput="updateThinkLabel('black')" onpointerup="snapSlider('black')" ontouchend="snapSlider('black')">
+                        <label>Razonamiento (Negras)</label>
+                        <select id="black-think">
+                            <option value="MINIMAL">MÍNIMO</option>
+                            <option value="LOW">BAJO</option>
+                            <option value="MEDIUM" selected>MEDIO</option>
+                            <option value="HIGH">ALTO</option>
+                        </select>
                     </div>
-                </div>
-            </div>
+                </div></div>
             <div id="local-section" style="display:none; margin-bottom: 15px;">
                 <div class="setup-grid">
                     <div class="setup-group" id="local-white-config">
@@ -775,8 +761,7 @@
                             <option value="Qwen3-1.7B-q4f16_1-MLC" selected>Qwen3 1.7B (~900 MB)</option>
                             <option value="Qwen3-4B-q4f16_1-MLC">Qwen3 4B (~2.3 GB)</option>
                         </select>
-                        <label class="setup-checkbox-label"><input type="checkbox"
-                                id="local-white-thinking"><span>Razonar</span></label>
+                        <label class="setup-checkbox-label"><input type="checkbox" id="local-white-thinking"><span>Razonar</span></label>
                     </div>
                     <div class="setup-group" id="local-black-config">
                         <label>Modelo Negras</label>
@@ -785,31 +770,24 @@
                             <option value="Qwen3-1.7B-q4f16_1-MLC">Qwen3 1.7B (~900 MB)</option>
                             <option value="Qwen3-4B-q4f16_1-MLC" selected>Qwen3 4B (~2.3 GB)</option>
                         </select>
-                        <label class="setup-checkbox-label"><input type="checkbox"
-                                id="local-black-thinking"><span>Razonar</span></label>
+                        <label class="setup-checkbox-label"><input type="checkbox" id="local-black-thinking"><span>Razonar</span></label>
                     </div>
                 </div>
-                <div id="load-progress"
-                    style="display:none; font-size:0.8rem; color: #f59e0b; text-align:center; margin-top: 4px; padding: 6px; background: rgba(0,0,0,0.3); border-radius:6px;">
-                </div>
+                <div id="load-progress" style="display:none; font-size:0.8rem; color: #f59e0b; text-align:center; margin-top: 4px; padding: 6px; background: rgba(0,0,0,0.3); border-radius:6px;"></div>
             </div>
             <div id="ollama-section" style="display:none; margin-bottom: 15px; text-align: left;">
-                <div id="ollama-model-group">
-                    <div class="setup-grid">
+                <div id="ollama-model-group"><div class="setup-grid">
                         <div class="setup-group" id="ollama-white-config">
                             <label>Modelo Blancas</label>
                             <select id="ollama-white-model" style="margin-bottom:8px;"></select>
-                            <label class="setup-checkbox-label"><input type="checkbox"
-                                    id="ollama-white-thinking"><span>Razonar</span></label>
+                            <label class="setup-checkbox-label"><input type="checkbox" id="ollama-white-thinking"><span>Razonar</span></label>
                         </div>
                         <div class="setup-group" id="ollama-black-config">
                             <label>Modelo Negras</label>
                             <select id="ollama-black-model" style="margin-bottom:8px;"></select>
-                            <label class="setup-checkbox-label"><input type="checkbox"
-                                    id="ollama-black-thinking"><span>Razonar</span></label>
+                            <label class="setup-checkbox-label"><input type="checkbox" id="ollama-black-thinking"><span>Razonar</span></label>
                         </div>
-                    </div>
-                </div>
+                    </div></div>
             </div>
             <button id="start-btn">Comenzar Duelo</button>
         </div>
@@ -956,29 +934,6 @@
             toggleModo();
         }
 
-        function updateThinkLabel(color) {
-            const val = Math.round(document.getElementById(`${color}-think`).value);
-            const labels = ["MÍNIMO", "BAJO", "MEDIO", "ALTO"];
-            document.getElementById(`${color}-think-val`).innerText = labels[val];
-        }
-
-        function snapSlider(color) {
-            const el = document.getElementById(`${color}-think`);
-            const target = Math.round(el.value);
-            const start = parseFloat(el.value);
-            const duration = 200;
-            const startTime = performance.now();
-            
-            function animate(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 0.5 - Math.cos(progress * Math.PI) / 2; // swing
-                el.value = start + (target - start) * eased;
-                if (progress < 1) requestAnimationFrame(animate);
-            }
-            requestAnimationFrame(animate);
-        }
-
         let ollamaFetchTimer = null;
         async function fetchOllamaModels() {
             const statusEl = document.getElementById('ollama-status');
@@ -1080,7 +1035,11 @@
 
                 trigger.onclick = (e) => {
                     e.stopPropagation();
-                    // Cerrar otros abiertos
+                    const rect = container.getBoundingClientRect();
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    if (spaceBelow < 160) container.classList.add('open-up');
+                    else container.classList.remove('open-up');
+
                     document.querySelectorAll('.custom-select').forEach(cs => {
                         if (cs !== container) cs.classList.remove('active');
                     });
@@ -1186,10 +1145,9 @@
                 if (!config.apiKey) return alert("Falta API Key");
                 genAI = new GoogleGenerativeAI(config.apiKey);
                 config.w.model = document.getElementById('white-model').value;
-                const thinkLevels = ["MINIMAL", "LOW", "MEDIUM", "HIGH"];
-                config.w.think = thinkLevels[Math.round(document.getElementById('white-think').value)];
+                config.w.think = document.getElementById('white-think').value;
                 config.b.model = document.getElementById('black-model').value;
-                config.b.think = thinkLevels[Math.round(document.getElementById('black-think').value)];
+                config.b.think = document.getElementById('black-think').value;
             } else if (config.proveedor === 'local') {
                 config.w.model = document.getElementById('local-white-model').value;
                 config.b.model = document.getElementById('local-black-model').value;
