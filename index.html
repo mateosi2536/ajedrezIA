@@ -461,52 +461,30 @@
         }
 
         .player-info {
-            padding: 1rem;
-            background: rgba(30, 41, 59, 0.5);
-            border-radius: 16px;
+            padding: 1.2rem;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 18px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
-        .player-tag {
-            font-size: 0.55rem;
-            color: var(--text-dim);
-        }
-
-        .status-playing {
-            font-size: 0.8rem;
-            color: #10b981;
-        }
-
-        .status-paused {
-            font-size: 0.8rem;
-            color: #f59e0b;
-        }
-
-        .player-header {
+        .player-info-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
-        }
-
-        .token-badge {
-            font-size: 0.65rem;
-            color: #fbbf24;
-            font-weight: 600;
-            opacity: 0.9;
-        }
-
-        .player-score {
-            font-size: 1.3rem;
-            font-weight: 700;
-        }
-
-        .player-name {
-            font-size: 0.75rem;
-            text-transform: uppercase;
+            font-size: 0.82rem;
             color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .player-name-group {
+            text-transform: capitalize;
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .reasoning-box {
@@ -858,15 +836,15 @@
 
         <!-- Blancas -->
         <div class="side-panel">
-            <div class="player-info white">
-                <div class="player-header">
-                    <div>
-                        <span class="player-name">Blancas (CPU)</span>
-                        <div id="w-tag" class="player-tag"></div>
-                    </div>
-                    <span class="player-score" id="score-w">0</span>
+            <div class="player-info">
+                <div class="player-info-row">
+                    <span id="tag-w">Blancas (CPU)</span>
+                    <span id="score-w">Puntos: 0</span>
                 </div>
-                <div class="token-badge" id="token-w">Tokens: 0</div>
+                <div class="player-info-row">
+                    <span class="player-name-group" id="name-w">Modelo</span>
+                    <span id="tokens-w">0 tokens</span>
+                </div>
             </div>
             <div class="reasoning-box">
                 <div class="reasoning-header">Traza Mental [B]</div>
@@ -900,15 +878,15 @@
 
         <!-- Negras -->
         <div class="side-panel">
-            <div class="player-info black">
-                <div class="player-header">
-                    <div>
-                        <span class="player-name">Negras (CPU)</span>
-                        <div id="b-tag" class="player-tag"></div>
-                    </div>
-                    <span class="player-score" id="score-b">0</span>
+            <div class="player-info">
+                <div class="player-info-row">
+                    <span id="tag-b">Negras (CPU)</span>
+                    <span id="score-b">Puntos: 0</span>
                 </div>
-                <div class="token-badge" id="token-b">Tokens: 0</div>
+                <div class="player-info-row">
+                    <span class="player-name-group" id="name-b">Modelo</span>
+                    <span id="tokens-b">0 tokens</span>
+                </div>
             </div>
             <div class="reasoning-box">
                 <div class="reasoning-header">Traza Mental [N]</div>
@@ -1199,20 +1177,10 @@
                 config.b.thinking = document.getElementById('ollama-black-thinking').checked;
             }
 
-            const esJugador = config.modo === 'jugador-cpu';
-            document.querySelector('.player-info.white .player-name').innerText = esJugador && config.playerColor === 'w' ? 'Tú (Blancas)' : 'Blancas (CPU)';
-            document.querySelector('.player-info.black .player-name').innerText = esJugador && config.playerColor === 'b' ? 'Tú (Negras)' : 'Negras (CPU)';
-            if (config.proveedor === 'gemini') {
-                document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : `${config.w.model} (${config.w.think})`;
-                document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : `${config.b.model} (${config.b.think})`;
-            } else if (config.proveedor === 'local') {
-                const getLabel = id => { const s = document.getElementById(id); return s.options[s.selectedIndex].text; };
-                document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : getLabel('local-white-model');
-                document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : getLabel('local-black-model');
-            } else if (config.proveedor === 'ollama') {
-                document.getElementById('w-tag').innerText = esJugador && config.playerColor === 'w' ? '' : config.w.model;
-                document.getElementById('b-tag').innerText = esJugador && config.playerColor === 'b' ? '' : config.b.model;
-            }
+            document.getElementById('name-w').innerText = `${config.w.model.replace('-preview', '')} ${config.w.think || ''}`.trim();
+            document.getElementById('name-b').innerText = `${config.b.model.replace('-preview', '')} ${config.b.think || ''}`.trim();
+            document.getElementById('tag-w').innerText = config.modo === 'jugador-cpu' ? (config.playerColor === 'w' ? 'Tú (Blancas)' : 'Blancas (CPU)') : 'Blancas (CPU)';
+            document.getElementById('tag-b').innerText = config.modo === 'jugador-cpu' ? (config.playerColor === 'b' ? 'Tú (Negras)' : 'Negras (CPU)') : 'Negras (CPU)';
 
             ui.setup.style.display = "none";
             ui.main.classList.remove('hidden');
@@ -1394,7 +1362,7 @@
                     const usage = (await result.response).usageMetadata;
                     if (usage?.totalTokenCount) {
                         tokenUsage[isW ? 'w' : 'b'] += usage.totalTokenCount;
-                        document.getElementById(`token-${isW ? 'w' : 'b'}`).innerText = `Tokens: ${tokenUsage[isW ? 'w' : 'b'].toLocaleString()}`;
+                        document.getElementById(`tokens-${isW ? 'w' : 'b'}`).innerText = `${tokenUsage[isW ? 'w' : 'b'].toLocaleString()} tokens`;
                     }
                 }
 
@@ -1423,17 +1391,18 @@
 
         function updateMetrics() {
             const vals = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-            let sumW = 0, sumB = 0;
+            let scoreW = 0, scoreB = 0;
             game.board().flat().filter(p => p).forEach(p => {
                 const val = vals[p.type];
-                if (p.color === 'w') sumW += val; else sumB += val;
+                if (p.color === 'w') scoreW += val; else scoreB += val;
             });
-            ui.scoreW.innerText = sumW; ui.scoreB.innerText = sumB;
-            const diff = sumW - sumB;
+            ui.scoreW.innerText = `Puntos: ${scoreW}`;
+            ui.scoreB.innerText = `Puntos: ${scoreB}`;
+            const diff = scoreW - scoreB;
             ui.materialDiff.innerText = (diff > 0 ? "+" : "") + diff;
             ui.turnCount.innerText = Math.floor(game.history().length / 2) + 1;
-            const total = sumW + sumB;
-            ui.advantageBar.style.width = (total === 0 ? 50 : (sumB / total) * 100) + "%";
+            const total = scoreW + scoreB;
+            ui.advantageBar.style.width = (total === 0 ? 50 : (scoreB / total) * 100) + "%";
         }
     </script>
 </body>
