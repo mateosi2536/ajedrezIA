@@ -1659,21 +1659,15 @@
                 if (game.game_over()) ui.gameStatus.innerText = "Fin";
                 return;
             }
+            const isW = game.turn() === 'w';
             if (retries >= 3) {
-                const moves = game.moves();
-                const fallback = moves[Math.floor(Math.random() * moves.length)];
-                game.move(fallback);
-                await board.setPosition(game.fen(), true);
-                updateMetrics();
-                const isW = game.turn() !== 'w';
-                const entry = document.createElement('div');
-                entry.className = `log-item ${isW ? 'white' : 'black'}`;
-                entry.innerHTML = `<div class="log-move">${fallback} <span style="color:#f59e0b;font-size:0.65rem">(aleatorio)</span></div>`;
-                (isW ? ui.logsW : ui.logsB).prepend(entry);
-                setTimeout(() => triggerAI(), 1000);
+                ejecutarMovimientoAleatorio(isW);
                 return;
             }
-            const isW = game.turn() === 'w';
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); 
+
             const sideConf = isW ? config.w : config.b;
             if (sideConf.proveedor === 'humano') { habilitarInputJugador(isW ? 'w' : 'b'); return; }
             const hist = game.history();
@@ -1722,8 +1716,10 @@
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${sideConf.apiKey}`
                         },
+                        signal: controller.signal,
                         body: JSON.stringify(reqBody)
                     });
+                    clearTimeout(timeoutId);
                     if (!res.ok) throw new Error(`GPT Error ${res.status}`);
 
                     const reader = res.body.getReader();
@@ -1779,8 +1775,10 @@
                 } else if (sideConf.proveedor === 'ollama') {
                     const res = await fetch(`${sideConf.ollamaUrl}/api/chat`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        signal: controller.signal,
                         body: JSON.stringify({ model: sideConf.model, messages, stream: true, options: { temperature: 0.7 }, ...(sideConf.thinking && { think: true }) })
                     });
+                    clearTimeout(timeoutId);
                     if (!res.ok) throw new Error(`Ollama Error ${res.status}`);
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
@@ -1795,9 +1793,14 @@
                             if (!line.trim()) continue;
                             try {
                                 const json = JSON.parse(line);
+                                if (json.done) {
+                                    const total = (json.prompt_eval_count || 0) + (json.eval_count || 0);
+                                    tokenUsage[isW ? 'w' : 'b'] += total;
+                                    document.getElementById(`tokens-${isW ? 'w' : 'b'}`).innerText = `${tokenUsage[isW ? 'w' : 'b'].toLocaleString()} tokens`;
+                                }
                                 const msg = json.message || {};
-                                if (msg.thinking) { thinkContent += msg.thinking; liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + '▌'; }
-                                if (msg.content) { responseText += msg.content; liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌'; }
+                                if (json.message?.thinking) { thinkContent += json.message.thinking; liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + '▌'; }
+                                if (json.message?.content) { responseText += json.message.content; liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌'; }
                             } catch { continue; }
                         }
                     }
@@ -1838,10 +1841,33 @@
                     setTimeout(() => triggerAI(moveStr || "desconocido", retries + 1), 1500);
                 }
             } catch (e) {
-                console.error(e);
+                clearTimeout(timeoutId);
+                console.error("Error en IA:", e);
+                if (e.name === 'AbortError' || retries >= 2) {
+                    ejecutarMovimientoAleatorio(isW);
+                    return;
+                }
                 liveEntry.remove();
-                setTimeout(() => triggerAI(null, retries + 1), 3000);
+                setTimeout(() => triggerAI(null, retries + 1), 2000);
             }
+        }
+
+        function ejecutarMovimientoAleatorio(isW) {
+            const moves = game.moves();
+            if (moves.length === 0) return;
+            // Limpiar log de "pensando" actual
+            const logContainer = isW ? ui.logsW : ui.logsB;
+            if (logContainer.firstChild) logContainer.firstChild.remove();
+
+            const fallback = moves[Math.floor(Math.random() * moves.length)];
+            game.move(fallback);
+            board.setPosition(game.fen(), true);
+            updateMetrics();
+            const entry = document.createElement('div');
+            entry.className = `log-item ${isW ? 'white' : 'black'}`;
+            entry.innerHTML = `<div class="log-move">${fallback} <span style="color:#ef4444;font-size:0.65rem">(Timeout - Aleatorio)</span></div>`;
+            logContainer.prepend(entry);
+            setTimeout(() => triggerAI(), 1000);
         }
 
         function updateMetrics() {
