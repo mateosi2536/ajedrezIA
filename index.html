@@ -16,7 +16,6 @@
         :root {
             --bg-dark: #020617;
             --card-bg: rgba(15, 23, 42, 0.6);
-            --accent-w: #ffffff;
             --accent-b: #3b82f6;
             --text: #f8fafc;
             --text-dim: #94a3b8;
@@ -306,6 +305,63 @@
         .inline-field .setup-checkbox-label {
             margin-top: 0 !important;
             padding-left: 0;
+        }
+
+        /* --- NUEVAS CLASES PARA LIMPIEZA --- */
+        .setup-label {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+
+        .quote-box {
+            display: none;
+            padding: 20px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed var(--glass-border);
+            text-align: center;
+            min-height: 80px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quote-text {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 0;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .quote-author {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            font-style: normal;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+            margin-top: 5px;
+            display: block;
+        }
+
+        #load-progress {
+            display: none;
+            font-size: 0.8rem;
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 12px;
+            padding: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+        }
+
+        .setup-subtitle {
+            color: var(--text-dim);
+            margin-bottom: 1.5rem;
         }
 
         /* --- CUSTOM SELECT (PATRÓN REUTILIZADO) --- */
@@ -838,7 +894,7 @@
             text-align: left;
         }
 
-        .col-header {
+        .col-player-header {
             font-size: 0.8rem;
             font-weight: 700;
             letter-spacing: 0.06em;
@@ -847,10 +903,6 @@
             padding: 6px 0;
             margin-bottom: 12px;
             border-radius: 8px;
-        }
-
-        .col-white,
-        .col-black {
             color: #fff;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -865,16 +917,15 @@
     <div id="setup-overlay">
         <div class="setup-card">
             <h1>Ajedrez Analítico</h1>
-            <p style="color: var(--text-dim); margin-bottom: 1.5rem;">Configura la partida</p>
+            <p class="setup-subtitle">Configura la partida</p>
 
             <div class="players-grid">
                 <!-- WHITE -->
                 <div class="player-col">
-                    <div class="col-header col-white">♔ Blancas</div>
+                    <div class="col-player-header">♔ Blancas</div>
 
                     <div style="text-align:left; margin-bottom:14px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Proveedor</label>
+                        <label class="setup-label">Proveedor</label>
                         <select id="w-provider" onchange="toggleSide('w')">
                             <option value="humano">Humano</option>
                             <option value="gpt" selected>OpenAI</option>
@@ -889,9 +940,7 @@
                     <div id="w-gemini-creds" style="display:none;"><input type="password" id="w-gemini-key"
                             placeholder="API Key de Gemini..." /></div>
                     <div id="w-ollama-creds" style="display:none; margin-bottom:14px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:5px;">URL
-                            de Ollama</label>
+                        <label class="setup-label">URL de Ollama</label>
                         <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
                             <input type="text" id="w-ollama-url" value="http://localhost:11434"
                                 style="margin-bottom:0;" />
@@ -904,8 +953,7 @@
                     <div id="w-gpt-section">
                         <div class="inline-field-selects">
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <label class="setup-label">Modelo</label>
                                 <select id="w-gpt-model">
                                     <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
                                     <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
@@ -914,8 +962,7 @@
                                 </select>
                             </div>
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <label class="setup-label">Razonamiento</label>
                                 <select id="w-gpt-think">
                                     <option value="none">Ninguno</option>
                                     <option value="minimal">Mínimo</option>
@@ -931,8 +978,7 @@
                     <div id="w-gemini-section" style="display:none;">
                         <div class="inline-field-selects">
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <label class="setup-label">Modelo</label>
                                 <select id="w-gemini-model">
                                     <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
                                     <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
@@ -940,8 +986,7 @@
                                 </select>
                             </div>
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <label class="setup-label">Razonamiento</label>
                                 <select id="w-gemini-think">
                                     <option value="MINIMAL">MÍNIMO</option>
                                     <option value="LOW">BAJO</option>
@@ -953,8 +998,7 @@
                     </div>
 
                     <div id="w-local-section" style="display:none; margin-bottom:10px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                        <label class="setup-label">Modelo</label>
                         <div class="inline-field">
                             <select id="w-local-model">
                                 <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
@@ -967,8 +1011,7 @@
                     </div>
 
                     <div id="w-ollama-section" style="display:none; margin-bottom:10px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                        <label class="setup-label">Modelo</label>
                         <div class="inline-field">
                             <select id="w-ollama-model"></select>
                             <label class="setup-checkbox-label"><input type="checkbox"
@@ -976,22 +1019,20 @@
                         </div>
                     </div>
 
-                    <div id="w-humano-section"
-                        style="display:none; padding:20px; border-radius:16px; background:rgba(255,255,255,0.02); border:1px dashed var(--glass-border); text-align:center; min-height:80px; display:flex; align-items:center; justify-content:center;">
-                        <p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0; font-style:italic; line-height:1.4;">
+                    <div id="w-humano-section" class="quote-box">
+                        <p class="quote-text">
                             "El ajedrez es la lucha contra el error."<br>
-                            <span style="font-size:0.7rem; opacity:0.6; font-style:normal; text-transform:uppercase; letter-spacing:0.05rem; margin-top:5px; display:block;">— Johannes Zukertort</span>
+                            <span class="quote-author">— Johannes Zukertort</span>
                         </p>
                     </div>
                 </div>
 
                 <!-- BLACK -->
                 <div class="player-col">
-                    <div class="col-header col-black">♟ Negras</div>
+                    <div class="col-player-header">♟ Negras</div>
 
                     <div style="text-align:left; margin-bottom:14px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Proveedor</label>
+                        <label class="setup-label">Proveedor</label>
                         <select id="b-provider" onchange="toggleSide('b')">
                             <option value="humano">Humano</option>
                             <option value="gpt" selected>OpenAI</option>
@@ -1006,9 +1047,7 @@
                     <div id="b-gemini-creds" style="display:none;"><input type="password" id="b-gemini-key"
                             placeholder="API Key de Gemini..." /></div>
                     <div id="b-ollama-creds" style="display:none; margin-bottom:14px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);text-transform:uppercase;font-weight:600;letter-spacing:0.05em;margin-bottom:5px;">URL
-                            de Ollama</label>
+                        <label class="setup-label">URL de Ollama</label>
                         <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
                             <input type="text" id="b-ollama-url" value="http://localhost:11434"
                                 style="margin-bottom:0;" />
@@ -1021,8 +1060,7 @@
                     <div id="b-gpt-section">
                         <div class="inline-field-selects">
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <label class="setup-label">Modelo</label>
                                 <select id="b-gpt-model">
                                     <option value="gpt-5.4-nano">GPT-5.4 Nano</option>
                                     <option value="gpt-5.4-mini" selected>GPT-5.4 Mini</option>
@@ -1031,8 +1069,7 @@
                                 </select>
                             </div>
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <label class="setup-label">Razonamiento</label>
                                 <select id="b-gpt-think">
                                     <option value="none">Ninguno</option>
                                     <option value="minimal">Mínimo</option>
@@ -1048,8 +1085,7 @@
                     <div id="b-gemini-section" style="display:none;">
                         <div class="inline-field-selects">
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                                <label class="setup-label">Modelo</label>
                                 <select id="b-gemini-model">
                                     <option value="gemini-3.1-pro-preview">Gemini 3.1 Pro</option>
                                     <option value="gemini-3-flash-preview" selected>Gemini 3 Flash</option>
@@ -1057,8 +1093,7 @@
                                 </select>
                             </div>
                             <div class="select-col">
-                                <label
-                                    style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Razonamiento</label>
+                                <label class="setup-label">Razonamiento</label>
                                 <select id="b-gemini-think">
                                     <option value="MINIMAL">MÍNIMO</option>
                                     <option value="LOW">BAJO</option>
@@ -1070,8 +1105,7 @@
                     </div>
 
                     <div id="b-local-section" style="display:none; margin-bottom:10px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                        <label class="setup-label">Modelo</label>
                         <div class="inline-field">
                             <select id="b-local-model">
                                 <option value="Qwen3-0.6B-q4f16_1-MLC">Qwen3 0.6B (~300 MB)</option>
@@ -1084,8 +1118,7 @@
                     </div>
 
                     <div id="b-ollama-section" style="display:none; margin-bottom:10px;">
-                        <label
-                            style="display:block;font-size:0.65rem;color:var(--text-dim);margin-bottom:6px;text-transform:uppercase;font-weight:600;letter-spacing:0.05em;">Modelo</label>
+                        <label class="setup-label">Modelo</label>
                         <div class="inline-field">
                             <select id="b-ollama-model"></select>
                             <label class="setup-checkbox-label"><input type="checkbox"
@@ -1093,19 +1126,16 @@
                         </div>
                     </div>
 
-                    <div id="b-humano-section"
-                        style="display:none; padding:20px; border-radius:16px; background:rgba(255,255,255,0.02); border:1px dashed var(--glass-border); text-align:center; min-height:80px; display:flex; align-items:center; justify-content:center;">
-                        <p style="font-size:0.85rem; color:var(--text-dim); margin-bottom:0; font-style:italic; line-height:1.4;">
+                    <div id="b-humano-section" class="quote-box">
+                        <p class="quote-text">
                             "Toda la confianza que tengo se debe a mi capacidad de ver el tablero."<br>
-                            <span style="font-size:0.7rem; opacity:0.6; font-style:normal; text-transform:uppercase; letter-spacing:0.05rem; margin-top:5px; display:block;">— Bobby Fischer</span>
+                            <span class="quote-author">— Bobby Fischer</span>
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div id="load-progress"
-                style="display:none; font-size:0.8rem; color:#f59e0b; text-align:center; margin-bottom:12px; padding:6px; background:rgba(0,0,0,0.3); border-radius:6px;">
-            </div>
+            <div id="load-progress"></div>
             <button id="start-btn">Comenzar Duelo</button>
         </div>
 
@@ -1442,7 +1472,10 @@
                     trigger.innerText = select.options[select.selectedIndex]?.text || '';
                 };
                 refreshOptions();
-                new MutationObserver(refreshOptions).observe(select, { childList: true });
+                if (!select.dataset.observerAttached) {
+                    new MutationObserver(refreshOptions).observe(select, { childList: true });
+                    select.dataset.observerAttached = "true";
+                }
             });
         }
 
@@ -1479,6 +1512,39 @@
         };
         let genAI_w = null, genAI_b = null;
 
+        function getPlayerConfig(side) {
+            const prov = document.getElementById(`${side}-provider`).value;
+            const playerConf = { proveedor: prov, apiKey: "", ollamaUrl: "", model: "", think: "", thinking: false };
+
+            if (prov === 'gpt') {
+                playerConf.apiKey = document.getElementById(`${side}-gpt-key`).value.trim();
+                if (!playerConf.apiKey) { alert(`Falta API Key de OpenAI para ${side === 'w' ? 'Blancas' : 'Negras'}.`); return null; }
+                playerConf.model = document.getElementById(`${side}-gpt-model`).value;
+                playerConf.think = document.getElementById(`${side}-gpt-think`).value;
+            } else if (prov === 'gemini') {
+                playerConf.apiKey = document.getElementById(`${side}-gemini-key`).value.trim();
+                if (!playerConf.apiKey) { alert(`Falta API Key de Gemini para ${side === 'w' ? 'Blancas' : 'Negras'}.`); return null; }
+                playerConf.model = document.getElementById(`${side}-gemini-model`).value;
+                playerConf.think = document.getElementById(`${side}-gemini-think`).value;
+                
+                // Instanciación inteligente de Gemini
+                if (side === 'w') {
+                    if (!genAI_w || genAI_w.apiKey !== playerConf.apiKey) genAI_w = new GoogleGenerativeAI(playerConf.apiKey);
+                } else {
+                    if (!genAI_b || genAI_b.apiKey !== playerConf.apiKey) genAI_b = new GoogleGenerativeAI(playerConf.apiKey);
+                }
+            } else if (prov === 'local') {
+                playerConf.model = document.getElementById(`${side}-local-model`).value;
+                playerConf.thinking = document.getElementById(`${side}-local-thinking`).checked;
+            } else if (prov === 'ollama') {
+                playerConf.model = document.getElementById(`${side}-ollama-model`).value;
+                if (!playerConf.model) { alert(`Conecta con Ollama y selecciona un modelo para ${side === 'w' ? 'Blancas' : 'Negras'}.`); return null; }
+                playerConf.ollamaUrl = document.getElementById(`${side}-ollama-url`).value.trim().replace(/\/$/, '');
+                playerConf.thinking = document.getElementById(`${side}-ollama-thinking`).checked;
+            }
+            return playerConf;
+        }
+
         const ui = {
             setup: document.getElementById('setup-overlay'),
             main: document.getElementById('main-ui'),
@@ -1491,56 +1557,13 @@
         };
 
         document.getElementById('start-btn').onclick = async () => {
-            const wProv = document.getElementById('w-provider').value;
-            const bProv = document.getElementById('b-provider').value;
-            if (wProv === 'humano' && bProv === 'humano') return alert("Al menos un lado debe ser CPU.");
+            const wConf = getPlayerConfig('w');
+            const bConf = getPlayerConfig('b');
+            if (!wConf || !bConf) return;
+            if (wConf.proveedor === 'humano' && bConf.proveedor === 'humano') return alert("Al menos un lado debe ser CPU.");
 
-            config.w.proveedor = wProv;
-            config.b.proveedor = bProv;
-
-            // Read white config
-            if (wProv === 'gpt') {
-                config.w.apiKey = document.getElementById('w-gpt-key').value.trim();
-                if (!config.w.apiKey) return alert("Falta API Key de OpenAI para Blancas.");
-                config.w.model = document.getElementById('w-gpt-model').value;
-                config.w.think = document.getElementById('w-gpt-think').value;
-            } else if (wProv === 'gemini') {
-                config.w.apiKey = document.getElementById('w-gemini-key').value.trim();
-                if (!config.w.apiKey) return alert("Falta API Key de Gemini para Blancas.");
-                genAI_w = new GoogleGenerativeAI(config.w.apiKey);
-                config.w.model = document.getElementById('w-gemini-model').value;
-                config.w.think = document.getElementById('w-gemini-think').value;
-            } else if (wProv === 'local') {
-                config.w.model = document.getElementById('w-local-model').value;
-                config.w.thinking = document.getElementById('w-local-thinking').checked;
-            } else if (wProv === 'ollama') {
-                config.w.model = document.getElementById('w-ollama-model').value;
-                if (!config.w.model) return alert("Conecta con Ollama y selecciona un modelo para Blancas.");
-                config.w.ollamaUrl = document.getElementById('w-ollama-url').value.trim().replace(/\/$/, '');
-                config.w.thinking = document.getElementById('w-ollama-thinking').checked;
-            }
-
-            // Read black config
-            if (bProv === 'gpt') {
-                config.b.apiKey = document.getElementById('b-gpt-key').value.trim();
-                if (!config.b.apiKey) return alert("Falta API Key de OpenAI para Negras.");
-                config.b.model = document.getElementById('b-gpt-model').value;
-                config.b.think = document.getElementById('b-gpt-think').value;
-            } else if (bProv === 'gemini') {
-                config.b.apiKey = document.getElementById('b-gemini-key').value.trim();
-                if (!config.b.apiKey) return alert("Falta API Key de Gemini para Negras.");
-                genAI_b = new GoogleGenerativeAI(config.b.apiKey);
-                config.b.model = document.getElementById('b-gemini-model').value;
-                config.b.think = document.getElementById('b-gemini-think').value;
-            } else if (bProv === 'local') {
-                config.b.model = document.getElementById('b-local-model').value;
-                config.b.thinking = document.getElementById('b-local-thinking').checked;
-            } else if (bProv === 'ollama') {
-                config.b.model = document.getElementById('b-ollama-model').value;
-                if (!config.b.model) return alert("Conecta con Ollama y selecciona un modelo para Negras.");
-                config.b.ollamaUrl = document.getElementById('b-ollama-url').value.trim().replace(/\/$/, '');
-                config.b.thinking = document.getElementById('b-ollama-thinking').checked;
-            }
+            config.w = wConf;
+            config.b = bConf;
 
             // Load WebLLM models if needed
             const localSides = ['w', 'b'].filter(s => config[s].proveedor === 'local');
