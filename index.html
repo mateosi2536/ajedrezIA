@@ -84,6 +84,7 @@
             padding: 2rem;
             padding-top: max(2rem, calc((100vh - 600px) / 2));
             overflow-y: auto;
+            flex-wrap: wrap;
         }
 
         .setup-card {
@@ -102,12 +103,13 @@
 
         /* --- PANEL DE INFO (Refinado) --- */
         .info-panel {
-            width: 380px;
+            width: 100%;
+            max-width: 420px;
             background: none;
             border: none;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow-y: visible;
             scrollbar-width: none;
             justify-content: flex-start;
         }
@@ -120,12 +122,13 @@
             background: rgba(30, 41, 59, 0.4);
             backdrop-filter: blur(10px);
             /* Borde transparente para evitar que quede una línea fantasma */
-            border: 1px solid transparent; 
+            border: 1px solid transparent;
             border-radius: 20px;
             font-size: 0.85rem;
             line-height: 1.5;
             color: var(--text-dim);
-            box-shadow: none; /* Sin sombra al inicio */
+            box-shadow: none;
+            /* Sin sombra al inicio */
             overflow: hidden;
 
             /* Estado inicial: Colapsado y a la derecha */
@@ -143,12 +146,13 @@
             padding: 1.2rem;
             opacity: 1;
             transform: translateX(0);
-            border-color: var(--glass-border); /* Revelamos el borde */
+            border-color: var(--glass-border);
+            /* Revelamos el borde */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         /* Solo empuja hacia abajo si es un elemento visible seguido de OTRO visible */
-        .alert-item.show ~ .alert-item.show {
+        .alert-item.show~.alert-item.show {
             margin-top: 1rem;
         }
 
@@ -483,6 +487,26 @@
             padding-left: 20px;
         }
 
+        .custom-select-search {
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            border: none;
+            border-bottom: 1px solid var(--glass-border);
+            padding: 10px 16px;
+            color: var(--text);
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            z-index: 10;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .custom-select-search::placeholder {
+            color: var(--text-dim);
+            opacity: 0.5;
+        }
+
         .custom-option.selected {
             background: rgba(59, 130, 246, 0.2);
             color: var(--accent-b);
@@ -759,7 +783,7 @@
         }
 
         /* --- RESPONSIVIDAD MÓVIL / TABLET --- */
-        @media (max-width: 1024px) {
+        @media (max-width: 800px) {
             body {
                 overflow-y: auto;
                 align-items: flex-start;
@@ -928,14 +952,17 @@
                         <label class="setup-label">Proveedor</label>
                         <select id="w-provider" onchange="toggleSide('w')">
                             <option value="humano">Humano</option>
-                            <option value="gpt" selected>OpenAI</option>
+                            <option value="openrouter" selected>OpenRouter (Recomendado)</option>
+                            <option value="gpt">OpenAI</option>
                             <option value="gemini">Gemini</option>
                             <option value="ollama">Ollama</option>
                             <option value="local">WebLLM</option>
                         </select>
                     </div>
 
-                    <div id="w-gpt-creds"><input type="password" id="w-gpt-key" placeholder="API Key de OpenAI..." />
+                    <div id="w-openrouter-creds" style="display:none;"><input type="password" id="w-openrouter-key" placeholder="API Key de OpenRouter..." />
+                    </div>
+                    <div id="w-gpt-creds" style="display:none;"><input type="password" id="w-gpt-key" placeholder="API Key de OpenAI..." />
                     </div>
                     <div id="w-gemini-creds" style="display:none;"><input type="password" id="w-gemini-key"
                             placeholder="API Key de Gemini..." /></div>
@@ -948,6 +975,20 @@
                                 style="font-size:0.65rem;font-weight:700;text-transform:uppercase;white-space:nowrap;min-width:80px;text-align:center;">
                             </div>
                         </div>
+                    </div>
+
+                    <div id="w-openrouter-section" style="display:none;">
+                        <label class="setup-label">Modelo</label>
+                        <select id="w-openrouter-model" style="margin-bottom:8px;"></select>
+                        <label class="setup-label">Razonamiento</label>
+                        <select id="w-openrouter-think">
+                            <option value="none">Ninguno</option>
+                            <option value="minimal">Mínimo</option>
+                            <option value="low">Bajo</option>
+                            <option value="medium" selected>Medio</option>
+                            <option value="high">Alto</option>
+                            <option value="xhigh">Extremo</option>
+                        </select>
                     </div>
 
                     <div id="w-gpt-section">
@@ -1035,14 +1076,17 @@
                         <label class="setup-label">Proveedor</label>
                         <select id="b-provider" onchange="toggleSide('b')">
                             <option value="humano">Humano</option>
-                            <option value="gpt" selected>OpenAI</option>
+                            <option value="openrouter" selected>OpenRouter (Recomendado)</option>
+                            <option value="gpt">OpenAI</option>
                             <option value="gemini">Gemini</option>
                             <option value="ollama">Ollama</option>
                             <option value="local">WebLLM</option>
                         </select>
                     </div>
 
-                    <div id="b-gpt-creds"><input type="password" id="b-gpt-key" placeholder="API Key de OpenAI..." />
+                    <div id="b-openrouter-creds" style="display:none;"><input type="password" id="b-openrouter-key" placeholder="API Key de OpenRouter..." />
+                    </div>
+                    <div id="b-gpt-creds" style="display:none;"><input type="password" id="b-gpt-key" placeholder="API Key de OpenAI..." />
                     </div>
                     <div id="b-gemini-creds" style="display:none;"><input type="password" id="b-gemini-key"
                             placeholder="API Key de Gemini..." /></div>
@@ -1055,6 +1099,20 @@
                                 style="font-size:0.65rem;font-weight:700;text-transform:uppercase;white-space:nowrap;min-width:80px;text-align:center;">
                             </div>
                         </div>
+                    </div>
+
+                    <div id="b-openrouter-section" style="display:none;">
+                        <label class="setup-label">Modelo</label>
+                        <select id="b-openrouter-model" style="margin-bottom:8px;"></select>
+                        <label class="setup-label">Razonamiento</label>
+                        <select id="b-openrouter-think">
+                            <option value="none">Ninguno</option>
+                            <option value="minimal">Mínimo</option>
+                            <option value="low">Bajo</option>
+                            <option value="medium" selected>Medio</option>
+                            <option value="high">Alto</option>
+                            <option value="xhigh">Extremo</option>
+                        </select>
                     </div>
 
                     <div id="b-gpt-section">
@@ -1216,7 +1274,7 @@
             const cardSnap = (window.innerWidth > 1024) ? card.offsetHeight : null;
 
             const val = document.getElementById(`${side}-provider`).value;
-            ['gpt', 'gemini', 'local', 'ollama', 'humano'].forEach(p => {
+            ['gpt', 'gemini', 'local', 'ollama', 'humano', 'openrouter'].forEach(p => {
                 const creds = document.getElementById(`${side}-${p}-creds`);
                 if (creds) creds.style.display = (val === p) ? 'block' : 'none';
                 const section = document.getElementById(`${side}-${p}-section`);
@@ -1225,6 +1283,7 @@
                 }
             });
             if (val === 'ollama') fetchOllamaModelsSide(side);
+            if (val === 'openrouter') fetchOpenRouterModelsSide(side);
 
             // 1. Sincronizar alertas (CSS se encarga de su altura)
             updateAlerts();
@@ -1253,7 +1312,7 @@
         function updateCardHeight(cardSnap = null) {
             const card = document.querySelector('.setup-card');
 
-            if (window.innerWidth <= 1024) {
+            if (window.innerWidth <= 800) {
                 card.style.transition = 'none';
                 card.style.height = 'auto';
                 return;
@@ -1271,12 +1330,14 @@
         const ALERT_TEMPLATES = {
             'api_privacy': `<b>Privacidad Garantizada</b>Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún servidor externo.`,
             'api_cost': `<b>Control de Gastos</b>Se recomienda fijar un límite de uso en tu consola (OpenAI/Google Cloud) para evitar que bucles infinitos generen costes inesperados.`,
+            'openrouter_limits': `<b>Límites de Uso</b>Los modelos gratuitos de OpenRouter pueden tener límites de peticiones (rate limits). Si el modelo falla, intenta probar con otro diferente.`,
             'local_exp': `<b>Tecnología Experimental</b>El uso de modelos LLM en el navegador es una tecnología en desarrollo. La eficiencia será menor.`,
             'local_complex': `<b>Complejidad del Ajedrez</b>Jugar ajedrez es una tarea compleja. Modelos pequeños podrían realizar movimientos ilegales.`,
             'local_optim': `<b>Optimización de Recursos</b>Ambos lados usan WebLLM con el mismo modelo — se reutilizará la misma instancia en memoria.`,
             'ollama_req': `<b>Servicio Local Requerido</b>Asegúrate de que Ollama esté ejecutándose en tu PC antes de intentar conectar.`,
             'ollama_cors': `<b>Configuración de Acceso (CORS)</b>Para permitir la conexión, configura esta variable y reinicia Ollama:<div class="code-block">OLLAMA_ORIGINS=https://mateosi2536.github.io</div>`,
-            'human_mode': `<b>Modo Humano Activo</b>Tendrás control total sobre las piezas de tu color. Arrástralas para realizar tus jugadas cuando sea tu turno.`
+            'human_mode': `<b>Modo Humano Activo</b>Tendrás control total sobre las piezas de tu color. Arrástralas para realizar tus jugadas cuando sea tu turno.`,
+            'openrouter_info': `<b>Configuración de OpenRouter</b>Obtén tu llave en <a href="https://openrouter.ai/keys" target="_blank" style="color:var(--accent-b)">openrouter.ai/keys</a> (gratis, sin tarjeta).<br><br>Debes activar la opción "Enable free endpoints..." en <a href="https://openrouter.ai/settings/privacy" target="_blank" style="color:var(--accent-b)">openrouter.ai/settings/privacy</a> o no funcionará.`
         };
 
         function updateAlerts() {
@@ -1287,7 +1348,11 @@
             let desiredAlerts = [];
 
             if (provs.has('gpt') || provs.has('gemini')) {
-                desiredAlerts.push('api_privacy', 'api_cost');
+                desiredAlerts.push('api_privacy');
+                desiredAlerts.push('api_cost');
+            }
+            if (provs.has('openrouter')) {
+                desiredAlerts.push('openrouter_limits', 'openrouter_info');
             }
             if (provs.has('humano')) {
                 desiredAlerts.push('human_mode');
@@ -1422,61 +1487,196 @@
             }
         }
 
+        let allOpenRouterModels = [];
+
+        async function fetchOpenRouterModelsSide(side) {
+            const select = document.getElementById(`${side}-openrouter-model`);
+            if (!select) return;
+            
+            if (select.options.length > 0) {
+                updateCustomSelects();
+                return;
+            }
+
+            try {
+                const resp = await fetch('https://openrouter.ai/api/v1/models');
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                allOpenRouterModels = data.data;
+                
+                select.innerHTML = '';
+                
+                const recGroup = document.createElement('optgroup');
+                recGroup.label = 'Recomendados para Ajedrez';
+                
+                const recModels = [
+                    'google/gemini-2.0-pro-exp-02-05:free',
+                    'google/gemini-2.0-flash-lite-preview-02-05:free',
+                    'google/gemini-2.0-flash-thinking-exp:free',
+                    'meta-llama/llama-3.3-70b-instruct:free',
+                    'qwen/qwen-2.5-coder-32b-instruct:free',
+                    'deepseek/deepseek-chat:free',
+                    'mistralai/mistral-small-24b-instruct-2501:free'
+                ];
+                
+                const allGroup = document.createElement('optgroup');
+                allGroup.label = 'Todos los modelos gratuitos';
+                
+                // Filtrar solo modelos que terminan en :free
+                const freeModels = allOpenRouterModels.filter(m => m.id.endsWith(':free'));
+                
+                freeModels.sort((a,b) => a.name.localeCompare(b.name)).forEach(m => {
+                    const o = document.createElement('option');
+                    o.value = m.id;
+                    o.textContent = m.name || m.id;
+                    
+                    if (recModels.includes(m.id)) {
+                        const recO = o.cloneNode(true);
+                        recGroup.appendChild(recO);
+                    }
+                    allGroup.appendChild(o);
+                });
+                
+                if (recGroup.children.length === 0 && freeModels.length > 0) {
+                    freeModels.slice(0, 5).forEach(m => {
+                        const o = document.createElement('option');
+                        o.value = m.id; o.textContent = m.name;
+                        recGroup.appendChild(o);
+                    });
+                }
+                
+                select.appendChild(recGroup);
+                select.appendChild(allGroup);
+                
+                if (recGroup.firstChild) recGroup.firstChild.selected = true;
+                
+                select.dataset.searchable = "true";
+                updateCustomSelects();
+            } catch (e) {
+                console.error('Error fetching OpenRouter models:', e);
+                select.innerHTML = '<option value="">Error al cargar modelos</option>';
+                updateCustomSelects();
+            }
+        }
+
         // --- CUSTOM SELECTS ---
         function updateCustomSelects() {
             document.querySelectorAll('select').forEach(select => {
+                const isSearchable = select.dataset.searchable === "true";
+                
                 if (select.classList.contains('select-hidden')) {
                     const container = select.parentElement;
                     const trigger = container.querySelector('.custom-select-trigger');
                     const optionsContainer = container.querySelector('.custom-options');
                     trigger.innerText = select.options[select.selectedIndex]?.text || '';
-                    optionsContainer.innerHTML = '';
-                    Array.from(select.options).forEach((option, idx) => {
-                        const optDiv = document.createElement('div');
-                        optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
-                        optDiv.innerText = option.text;
-                        optDiv.onclick = (e) => { e.stopPropagation(); select.selectedIndex = idx; select.dispatchEvent(new Event('change')); container.classList.remove('active'); updateCustomSelects(); };
-                        optionsContainer.appendChild(optDiv);
-                    });
+                    
+                    // Solo refrescar opciones si NO está en pausa la interacción (evitar cerrar dropdown mientras escribes)
+                    if (!container.dataset.searching) {
+                        renderOptions(select, optionsContainer, container);
+                    }
                     return;
                 }
+
                 const container = document.createElement('div');
                 container.className = 'custom-select';
                 select.parentNode.insertBefore(container, select);
                 container.appendChild(select);
                 select.classList.add('select-hidden');
+
                 const trigger = document.createElement('div');
                 trigger.className = 'custom-select-trigger';
                 trigger.innerText = select.options[select.selectedIndex]?.text || '';
+
                 const optionsContainer = document.createElement('div');
                 optionsContainer.className = 'custom-options';
+
                 trigger.onclick = (e) => {
                     e.stopPropagation();
                     const rect = container.getBoundingClientRect();
                     if (window.innerHeight - rect.bottom < rect.top) container.classList.add('open-up');
                     else container.classList.remove('open-up');
+                    
                     document.querySelectorAll('.custom-select').forEach(cs => { if (cs !== container) cs.classList.remove('active'); });
                     container.classList.toggle('active');
+                    
+                    // Focus search if available
+                    if (container.classList.contains('active') && isSearchable) {
+                        setTimeout(() => optionsContainer.querySelector('.custom-select-search')?.focus(), 50);
+                    }
                 };
+
                 container.appendChild(trigger);
                 container.appendChild(optionsContainer);
-                const refreshOptions = () => {
-                    optionsContainer.innerHTML = '';
-                    Array.from(select.options).forEach((option, idx) => {
-                        const optDiv = document.createElement('div');
-                        optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
-                        optDiv.innerText = option.text;
-                        optDiv.onclick = (e) => { e.stopPropagation(); select.selectedIndex = idx; select.dispatchEvent(new Event('change')); container.classList.remove('active'); updateCustomSelects(); };
-                        optionsContainer.appendChild(optDiv);
-                    });
-                    trigger.innerText = select.options[select.selectedIndex]?.text || '';
-                };
-                refreshOptions();
+
+                if (isSearchable) {
+                    const searchInput = document.createElement('input');
+                    searchInput.type = 'text';
+                    searchInput.className = 'custom-select-search';
+                    searchInput.placeholder = 'Buscar modelo...';
+                    searchInput.onclick = (e) => e.stopPropagation();
+                    searchInput.oninput = (e) => {
+                        container.dataset.searching = "true";
+                        const term = e.target.value.toLowerCase();
+                        
+                        // Si es OpenRouter y el término es largo, buscar en todos los modelos conocidos
+                        if (select.id.includes('openrouter') && term.length > 2) {
+                            const matches = allOpenRouterModels.filter(m => 
+                                m.id.toLowerCase().includes(term) || (m.name && m.name.toLowerCase().includes(term))
+                            ).slice(0, 20);
+                            
+                            // Actualizar temporalmente el select original con estas opciones si no existen
+                            matches.forEach(m => {
+                                if (!Array.from(select.options).some(o => o.value === m.id)) {
+                                    const o = document.createElement('option');
+                                    o.value = m.id;
+                                    o.textContent = m.name || m.id;
+                                    select.appendChild(o);
+                                }
+                            });
+                        }
+                        
+                        renderOptions(select, optionsContainer, container, term);
+                    };
+                    optionsContainer.appendChild(searchInput);
+                }
+
+                renderOptions(select, optionsContainer, container);
+                
                 if (!select.dataset.observerAttached) {
-                    new MutationObserver(refreshOptions).observe(select, { childList: true });
+                    new MutationObserver(() => {
+                        if (!container.dataset.searching) renderOptions(select, optionsContainer, container);
+                    }).observe(select, { childList: true });
                     select.dataset.observerAttached = "true";
                 }
             });
+        }
+
+        function renderOptions(select, optionsContainer, container, filter = "") {
+            // Limpiar solo los items, no el search input
+            const items = optionsContainer.querySelectorAll('.custom-option');
+            items.forEach(i => i.remove());
+
+            Array.from(select.options).forEach((option, idx) => {
+                if (filter && !option.text.toLowerCase().includes(filter) && !option.value.toLowerCase().includes(filter)) return;
+                
+                const optDiv = document.createElement('div');
+                optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
+                optDiv.innerText = option.text;
+                optDiv.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    select.selectedIndex = idx; 
+                    select.dispatchEvent(new Event('change')); 
+                    container.classList.remove('active'); 
+                    container.dataset.searching = "";
+                    const searchInput = optionsContainer.querySelector('.custom-select-search');
+                    if (searchInput) searchInput.value = "";
+                    updateCustomSelects(); 
+                };
+                optionsContainer.appendChild(optDiv);
+            });
+            
+            const trigger = container.querySelector('.custom-select-trigger');
+            if (trigger) trigger.innerText = select.options[select.selectedIndex]?.text || '';
         }
 
         window.addEventListener('click', () => document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('active')));
@@ -1526,7 +1726,7 @@
                 if (!playerConf.apiKey) { alert(`Falta API Key de Gemini para ${side === 'w' ? 'Blancas' : 'Negras'}.`); return null; }
                 playerConf.model = document.getElementById(`${side}-gemini-model`).value;
                 playerConf.think = document.getElementById(`${side}-gemini-think`).value;
-                
+
                 // Instanciación inteligente de Gemini
                 if (side === 'w') {
                     if (!genAI_w || genAI_w.apiKey !== playerConf.apiKey) genAI_w = new GoogleGenerativeAI(playerConf.apiKey);
@@ -1541,6 +1741,11 @@
                 if (!playerConf.model) { alert(`Conecta con Ollama y selecciona un modelo para ${side === 'w' ? 'Blancas' : 'Negras'}.`); return null; }
                 playerConf.ollamaUrl = document.getElementById(`${side}-ollama-url`).value.trim().replace(/\/$/, '');
                 playerConf.thinking = document.getElementById(`${side}-ollama-thinking`).checked;
+            } else if (prov === 'openrouter') {
+                playerConf.apiKey = document.getElementById(`${side}-openrouter-key`).value.trim();
+                if (!playerConf.apiKey) { alert(`Falta API Key de OpenRouter para ${side === 'w' ? 'Blancas' : 'Negras'}.`); return null; }
+                playerConf.model = document.getElementById(`${side}-openrouter-model`).value;
+                playerConf.think = document.getElementById(`${side}-openrouter-think`).value; 
             }
             return playerConf;
         }
@@ -1673,7 +1878,7 @@
             }
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); 
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
 
             const sideConf = isW ? config.w : config.b;
             if (sideConf.proveedor === 'humano') { habilitarInputJugador(isW ? 'w' : 'b'); return; }
@@ -1828,6 +2033,74 @@
                     if (usage?.totalTokenCount) {
                         tokenUsage[isW ? 'w' : 'b'] += usage.totalTokenCount;
                         document.getElementById(`tokens-${isW ? 'w' : 'b'}`).innerText = `${tokenUsage[isW ? 'w' : 'b'].toLocaleString()} tokens`;
+                    }
+                } else if (sideConf.proveedor === 'openrouter') {
+                    const reqBody = { model: sideConf.model, messages: messages, stream: true, temperature: 0.7 };
+                    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${sideConf.apiKey}`,
+                            'HTTP-Referer': 'https://mateosi2536.github.io/',
+                            'X-Title': 'Ajedrez IA'
+                        },
+                        signal: controller.signal,
+                        body: JSON.stringify(reqBody)
+                    });
+                    clearTimeout(timeoutId);
+                    
+                    if (!res.ok) {
+                        const errorData = await res.json().catch(() => ({}));
+                        if (errorData.error?.message?.includes("No endpoints available matching your guardrail restrictions")) {
+                            alert("Configuración de OpenRouter Requerida:\n\nDebes activar 'Enable free endpoints that may publish prompts' en https://openrouter.ai/settings/privacy para que los modelos gratuitos funcionen.");
+                        }
+                        throw new Error(`OpenRouter Error ${res.status}`);
+                    }
+
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    let buffer = '';
+                    let inThink = false;
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); 
+                        for (const line of lines) {
+                            if (line.trim() === '' || line.trim() === 'data: [DONE]') continue;
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const event = JSON.parse(line.substring(6));
+                                    const delta = event.choices?.[0]?.delta || {};
+                                    let c = delta.content || '';
+                                    if (delta.reasoning) {
+                                        thinkContent += delta.reasoning;
+                                        liveThinkDet.style.display = '';
+                                        liveThinkEl.textContent = thinkContent + '▌';
+                                    }
+                                    if (c) {
+                                        if (inThink) {
+                                            const e = c.indexOf('</think>');
+                                            if (e !== -1) { thinkContent += c.slice(0, e); inThink = false; c = c.slice(e + 8); }
+                                            else { thinkContent += c; c = ''; }
+                                        } else {
+                                            const s = c.indexOf('<think>');
+                                            if (s !== -1) { responseText += c.slice(0, s); inThink = true; c = c.slice(s + 7); }
+                                            if (inThink) {
+                                                const e = c.indexOf('</think>');
+                                                if (e !== -1) { thinkContent += c.slice(0, e); inThink = false; c = c.slice(e + 8); }
+                                                else { thinkContent += c; c = ''; }
+                                            } else {
+                                                responseText += c;
+                                            }
+                                        }
+                                        if (thinkContent && !delta.reasoning) { liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + (inThink ? '▌' : ''); }
+                                        if (responseText) { liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + (!inThink ? '▌' : ''); }
+                                    }
+                                } catch (e) {}
+                            }
+                        }
                     }
                 }
 
