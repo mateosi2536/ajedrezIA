@@ -38,7 +38,6 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow: hidden;
         }
 
         .bg-mesh {
@@ -323,7 +322,7 @@
         }
 
         .quote-box {
-            display: none;
+            display: flex;
             padding: 20px;
             border-radius: 16px;
             background: rgba(255, 255, 255, 0.02);
@@ -437,7 +436,7 @@
             transform: translateY(-10px);
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            max-height: 180px;
+            max-height: 250px;
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
@@ -505,6 +504,13 @@
         .custom-select-search::placeholder {
             color: var(--text-dim);
             opacity: 0.5;
+        }
+
+        .no-results {
+            padding: 10px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            text-align: center;
         }
 
         .custom-option.selected {
@@ -988,7 +994,7 @@
                     <span class="metric-label">Turno</span>
                 </div>
                 <div class="metric-card" id="status-card">
-                    <span class="metric-val status-playing" id="game-status">En Juego</span>
+                    <span class="metric-val" id="game-status">En Juego</span>
                     <span class="metric-label">Estado</span>
                 </div>
                 <div class="metric-card">
@@ -996,8 +1002,8 @@
                     <span class="metric-label">Puntos</span>
                 </div>
             </div>
-            <button class="btn-simple" onclick="window.location.reload()"
-                style="align-self: center; margin-top: 5px;">Terminar Juego</button>
+            <button class="btn-simple" onclick="resetApp()" style="align-self: center; margin-top: 5px;">Terminar
+                Juego</button>
         </div>
 
         <!-- Negras -->
@@ -1037,29 +1043,18 @@
             });
             if (val === 'ollama') fetchOllamaModelsSide(side);
             if (val === 'openrouter') fetchOpenRouterModelsSide(side);
+            if (val === 'gpt') {
+                fetchGPTModelsSide(side);
+                const gptModel = document.getElementById(`${side}-gpt-model`).value;
+                const thinkCol = document.querySelector(`#${side}-gpt-section .select-col:last-child`);
+                if (thinkCol) thinkCol.style.display = gptModel.startsWith('gpt-5') ? 'block' : 'none';
+            }
 
             // 1. Sincronizar alertas (CSS se encarga de su altura)
             updateAlerts();
 
             // 2. Animar solo la tarjeta izquierda
             updateCardHeight(cardSnap);
-        }
-
-        function animateHeight(el, fromH, toH) {
-            el.style.transition = 'none';
-            el.style.height = fromH + 'px';
-            // Forzar reflow
-            el.offsetHeight; // eslint-disable-line no-unused-expressions
-            // Arrancar la transición hacia la nueva altura
-            el.style.transition = 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            el.style.height = toH + 'px';
-            // Al terminar, liberar a 'auto'
-            const handler = (e) => {
-                if (e.propertyName !== 'height') return;
-                el.style.height = 'auto';
-                el.removeEventListener('transitionend', handler);
-            };
-            el.addEventListener('transitionend', handler);
         }
 
         function updateCardHeight(cardSnap = null) {
@@ -1077,13 +1072,24 @@
             const cardToH = card.offsetHeight;
             const cardFromH = (cardSnap !== null) ? cardSnap : cardToH;
 
-            animateHeight(card, cardFromH, cardToH);
+            card.style.transition = 'none';
+            card.style.height = cardFromH + 'px';
+            card.offsetHeight; // force reflow
+            card.style.transition = 'height 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            card.style.height = cardToH + 'px';
+
+            const handler = (e) => {
+                if (e.propertyName !== 'height') return;
+                card.style.height = 'auto';
+                card.removeEventListener('transitionend', handler);
+            };
+            card.addEventListener('transitionend', handler);
         }
 
         const ALERT_TEMPLATES = {
             'api_privacy': `<b>Privacidad Garantizada</b>Tu API Key se utiliza únicamente para las peticiones desde tu navegador. No la guardamos en ningún servidor externo.`,
             'api_cost': `<b>Control de Gastos</b>Se recomienda fijar un límite de uso en tu consola (OpenAI/Google Cloud) para evitar que bucles infinitos generen costes inesperados.`,
-            'openrouter_limits': `<b>Límites de Uso</b>Los modelos gratuitos de OpenRouter pueden tener límites de peticiones (rate limits). Si el modelo falla, intenta probar con otro diferente.`,
+            'openrouter_limits': `<b>Ventaja de OpenRouter</b>Este proveedor ofrece acceso a multitud de modelos gratuitos (marcados como :free). Puedes aprovecharlos para realizar pruebas exhaustivas sin incurrir en costes de facturación.`,
             'local_exp': `<b>Tecnología Experimental</b>El uso de modelos LLM en el navegador es una tecnología en desarrollo. La eficiencia será menor.`,
             'local_complex': `<b>Complejidad del Ajedrez</b>Jugar ajedrez es una tarea compleja. Modelos pequeños podrían realizar movimientos ilegales.`,
             'local_optim': `<b>Optimización de Recursos</b>Ambos lados usan WebLLM con el mismo modelo — se reutilizará la misma instancia en memoria.`,
@@ -1224,17 +1230,14 @@
             const url = urlEl.value.trim().replace(/\/$/, '');
             statusEl.style.color = 'var(--text-dim)';
             statusEl.innerText = 'CONECTANDO...';
-            buildOllamaOptions([select], []);
             try {
                 const resp = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(4000) });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 statusEl.textContent = 'CONECTADO';
-                statusEl.style.color = 'var(--text-dim)';
                 const data = await resp.json();
                 buildOllamaOptions([select], (data.models || []).map(m => m.name));
             } catch (e) {
                 statusEl.textContent = 'SIN CONEXIÓN';
-                statusEl.style.color = 'var(--text-dim)';
                 buildOllamaOptions([select], []);
                 console.error(e);
             }
@@ -1258,54 +1261,18 @@
                     const data = await openRouterFetchPromise;
                     allOpenRouterModels = data.data;
                 }
-                
+
                 select.innerHTML = '';
-                
-                const recGroup = document.createElement('optgroup');
-                recGroup.label = 'Recomendados para Ajedrez';
-                
-                const recModels = [
-                    'google/gemini-2.0-pro-exp-02-05:free',
-                    'google/gemini-2.0-flash-lite-preview-02-05:free',
-                    'google/gemini-2.0-flash-thinking-exp:free',
-                    'meta-llama/llama-3.3-70b-instruct:free',
-                    'qwen/qwen-2.5-coder-32b-instruct:free',
-                    'deepseek/deepseek-chat:free',
-                    'mistralai/mistral-small-24b-instruct-2501:free'
-                ];
-                
-                const allGroup = document.createElement('optgroup');
-                allGroup.label = 'Todos los modelos gratuitos';
-                
-                // Filtrar solo modelos que terminan en :free
-                const freeModels = allOpenRouterModels.filter(m => m.id.endsWith(':free'));
-                
-                freeModels.sort((a,b) => a.name.localeCompare(b.name)).forEach(m => {
+                const defaultModel = "qwen/qwen3.6-plus:free";
+
+                allOpenRouterModels.sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id)).forEach(m => {
                     const o = document.createElement('option');
                     o.value = m.id;
                     o.textContent = m.name || m.id;
-                    
-                    if (recModels.includes(m.id)) {
-                        const recO = o.cloneNode(true);
-                        recGroup.appendChild(recO);
-                    }
-                    allGroup.appendChild(o);
+                    if (m.id === defaultModel) o.selected = true;
+                    select.appendChild(o);
                 });
-                
-                if (recGroup.children.length === 0 && freeModels.length > 0) {
-                    freeModels.slice(0, 5).forEach(m => {
-                        const o = document.createElement('option');
-                        o.value = m.id; o.textContent = m.name;
-                        recGroup.appendChild(o);
-                    });
-                }
-                
-                select.appendChild(recGroup);
-                select.appendChild(allGroup);
-                
-                if (recGroup.firstChild) recGroup.firstChild.selected = true;
-                
-                select.dataset.searchable = "true";
+
                 updateCustomSelects();
             } catch (e) {
                 console.error('Error fetching OpenRouter models:', e);
@@ -1314,18 +1281,72 @@
             }
         }
 
+        let allGPTModels = [];
+        let gptFetchPromise = null;
+
+        async function fetchGPTModelsSide(side) {
+            const select = document.getElementById(`${side}-gpt-model`);
+            const key = document.getElementById(`${side}-gpt-key`)?.value.trim();
+
+            if (!select || !key) return;
+            if (select.options.length > 1) { // 1 porque suele tener el default
+                updateCustomSelects();
+                return;
+            }
+
+            try {
+                if (!allGPTModels.length) {
+                    if (!gptFetchPromise) {
+                        gptFetchPromise = fetch('https://api.openai.com/v1/models', {
+                            headers: { 'Authorization': `Bearer ${key}` }
+                        }).then(r => r.json());
+                    }
+                    const data = await gptFetchPromise;
+                    if (data.error) throw new Error(data.error.message);
+                    allGPTModels = data.data.filter(m => {
+                        const id = m.id.toLowerCase();
+                        if (id.includes('image') || id.includes('dall-e') || id.includes('tts') || id.includes('whisper') || id.includes('moderation') || id.includes('audio') || id.includes('realtime')) return false;
+                        return id.includes('gpt') || id.startsWith('o1') || id.startsWith('o3') || id.startsWith('o4');
+                    });
+                }
+
+                select.innerHTML = '';
+                const defaultModel = "gpt-4o-mini";
+
+                allGPTModels.sort((a, b) => a.id.localeCompare(b.id)).forEach(m => {
+                    const o = document.createElement('option');
+                    o.value = m.id;
+                    o.textContent = m.id;
+                    if (m.id === defaultModel) o.selected = true;
+                    select.appendChild(o);
+                });
+
+                updateCustomSelects();
+
+                // Añadir listener para ocultar razonamiento si no es gpt-5
+                select.onchange = () => {
+                    const thinkCol = document.querySelector(`#${side}-gpt-section .select-col:last-child`);
+                    if (thinkCol) thinkCol.style.display = select.value.startsWith('gpt-5') ? 'block' : 'none';
+                    updateCardHeight();
+                };
+            } catch (e) {
+                console.error('Error fetching OpenAI models:', e);
+                // Si hay error (probablemente por la key), no limpiamos el select para permitir reintento
+                updateCustomSelects();
+            }
+        }
+
         // --- CUSTOM SELECTS ---
         function updateCustomSelects() {
             document.querySelectorAll('select').forEach(select => {
                 const isSearchable = select.dataset.searchable === "true";
-                
+
                 if (select.classList.contains('select-hidden')) {
                     const container = select.parentElement;
                     const trigger = container.querySelector('.custom-select-trigger');
                     const optionsContainer = container.querySelector('.custom-options');
                     trigger.innerText = select.options[select.selectedIndex]?.text || '';
-                    
-                    // Solo refrescar opciones si NO está en pausa la interacción (evitar cerrar dropdown mientras escribes)
+
                     if (!container.dataset.searching) {
                         renderOptions(select, optionsContainer, container);
                     }
@@ -1350,13 +1371,13 @@
                     const rect = container.getBoundingClientRect();
                     if (window.innerHeight - rect.bottom < rect.top) container.classList.add('open-up');
                     else container.classList.remove('open-up');
-                    
+
                     document.querySelectorAll('.custom-select').forEach(cs => { if (cs !== container) cs.classList.remove('active'); });
                     container.classList.toggle('active');
-                    
-                    // Focus search if available
-                    if (container.classList.contains('active') && isSearchable) {
-                        setTimeout(() => optionsContainer.querySelector('.custom-select-search')?.focus(), 50);
+
+                    if (container.classList.contains('active')) {
+                        const input = optionsContainer.querySelector('.custom-select-search');
+                        if (input) input.focus();
                     }
                 };
 
@@ -1371,32 +1392,13 @@
                     searchInput.onclick = (e) => e.stopPropagation();
                     searchInput.oninput = (e) => {
                         container.dataset.searching = "true";
-                        const term = e.target.value.toLowerCase();
-                        
-                        // Si es OpenRouter y el término es largo, buscar en todos los modelos conocidos
-                        if (select.id.includes('openrouter') && term.length > 2) {
-                            const matches = allOpenRouterModels.filter(m => 
-                                m.id.toLowerCase().includes(term) || (m.name && m.name.toLowerCase().includes(term))
-                            ).slice(0, 20);
-                            
-                            // Actualizar temporalmente el select original con estas opciones si no existen
-                            matches.forEach(m => {
-                                if (!Array.from(select.options).some(o => o.value === m.id)) {
-                                    const o = document.createElement('option');
-                                    o.value = m.id;
-                                    o.textContent = m.name || m.id;
-                                    select.appendChild(o);
-                                }
-                            });
-                        }
-                        
-                        renderOptions(select, optionsContainer, container, term);
+                        renderOptions(select, optionsContainer, container, e.target.value);
                     };
                     optionsContainer.appendChild(searchInput);
                 }
 
                 renderOptions(select, optionsContainer, container);
-                
+
                 if (!select.dataset.observerAttached) {
                     new MutationObserver(() => {
                         if (!container.dataset.searching) renderOptions(select, optionsContainer, container);
@@ -1407,71 +1409,86 @@
         }
 
         function renderOptions(select, optionsContainer, container, filter = "") {
-            // Limpiar solo los items, no el search input
-            const items = optionsContainer.querySelectorAll('.custom-option');
+            const items = optionsContainer.querySelectorAll('.custom-option, .no-results');
             items.forEach(i => i.remove());
 
+            let hasMatch = false;
+
             Array.from(select.options).forEach((option, idx) => {
-                if (filter && !option.text.toLowerCase().includes(filter) && !option.value.toLowerCase().includes(filter)) return;
-                
-                const optDiv = document.createElement('div');
-                optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
-                optDiv.innerText = option.text;
-                optDiv.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    select.selectedIndex = idx; 
-                    select.dispatchEvent(new Event('change')); 
-                    container.classList.remove('active'); 
-                    container.dataset.searching = "";
-                    const searchInput = optionsContainer.querySelector('.custom-select-search');
-                    if (searchInput) searchInput.value = "";
-                    updateCustomSelects(); 
-                };
-                optionsContainer.appendChild(optDiv);
+                const text = option.text.toLowerCase();
+                const val = option.value.toLowerCase();
+                const searchTerm = filter.toLowerCase();
+
+                if (!filter || text.includes(searchTerm) || val.includes(searchTerm)) {
+                    hasMatch = true;
+                    const optDiv = document.createElement('div');
+                    optDiv.className = `custom-option ${option.selected ? 'selected' : ''}`;
+                    optDiv.innerText = option.text;
+
+                    optDiv.onclick = (e) => {
+                        e.stopPropagation();
+                        select.selectedIndex = idx;
+                        select.dispatchEvent(new Event('change'));
+                        container.classList.remove('active');
+
+                        container.dataset.searching = "";
+                        const searchInput = optionsContainer.querySelector('.custom-select-search');
+                        if (searchInput) searchInput.value = "";
+
+                        updateCustomSelects();
+                    };
+                    optionsContainer.appendChild(optDiv);
+                }
             });
-            
+
+            if (!hasMatch) {
+                const noRes = document.createElement('div');
+                noRes.className = 'no-results';
+                noRes.innerText = 'No se encontraron modelos';
+                noRes.style.padding = '10px';
+                noRes.style.fontSize = '0.8rem';
+                noRes.style.color = 'var(--text-dim)';
+                noRes.style.textAlign = 'center';
+                optionsContainer.appendChild(noRes);
+            }
+
             const trigger = container.querySelector('.custom-select-trigger');
             if (trigger) trigger.innerText = select.options[select.selectedIndex]?.text || '';
         }
 
         window.addEventListener('click', () => document.querySelectorAll('.custom-select').forEach(cs => cs.classList.remove('active')));
 
+
+        const GEMINI_MODELS = [
+            { v: 'gemini-2.0-flash', l: 'Gemini 2.0 Flash', sel: true },
+            { v: 'gemini-2.0-flash-lite-preview', l: 'Gemini 2.0 Flash Lite' },
+            { v: 'gemini-2.0-pro-exp-02-05', l: 'Gemini 2.0 Pro Exp' }
+        ];
+        const LOCAL_MODELS = [
+            { v: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', l: 'Qwen2.5 0.5B (~300 MB)' },
+            { v: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', l: 'Qwen2.5 1.5B (~900 MB)' },
+            { v: 'Qwen2.5-3B-Instruct-q4f16_1-MLC', l: 'Qwen2.5 3B (~1.8 GB)' }
+        ];
+        const THINK_OPTS = [
+            { v: 'none', l: 'Ninguno' },
+            { v: 'low', l: 'Bajo' },
+            { v: 'medium', l: 'Medio', sel: true },
+            { v: 'high', l: 'Alto' }
+        ];
+        const GEMINI_THINK_OPTS = [
+            { v: '1000', l: 'MÍNIMO' },
+            { v: '4000', l: 'MEDIO', sel: true },
+            { v: '16000', l: 'ALTO' }
+        ];
+
         function renderPlayerSetup(side, title, quote, author) {
-            const gptModels = [
-                { v: 'gpt-5.4-nano', l: 'GPT-5.4 Nano' },
-                { v: 'gpt-5.4-mini', l: 'GPT-5.4 Mini', sel: true },
-                { v: 'gpt-5.4', l: 'GPT-5.4' },
-                { v: 'gpt-5.4-pro', l: 'GPT-5.4 Pro' }
-            ];
-            const geminiModels = [
-                { v: 'gemini-3.1-pro-preview', l: 'Gemini 3.1 Pro' },
-                { v: 'gemini-3-flash-preview', l: 'Gemini 3 Flash', sel: true },
-                { v: 'gemini-3.1-flash-lite-preview', l: 'Gemini 3.1 Flash Lite' }
-            ];
-            const localModels = [
-                { v: 'Qwen3-0.6B-q4f16_1-MLC', l: 'Qwen3 0.6B (~300 MB)' },
-                { v: 'Qwen3-1.7B-q4f16_1-MLC', l: 'Qwen3 1.7B (~900 MB)', sel: side === 'w' },
-                { v: 'Qwen3-4B-q4f16_1-MLC', l: 'Qwen3 4B (~2.3 GB)', sel: side === 'b' }
-            ];
-            const thinkOpts = [
-                { v: 'none', l: 'Ninguno' },
-                { v: 'minimal', l: 'Mínimo' },
-                { v: 'low', l: 'Bajo' },
-                { v: 'medium', l: 'Medio', sel: true },
-                { v: 'high', l: 'Alto' },
-                { v: 'xhigh', l: 'Extremo' }
-            ];
-            const geminiThinkOpts = [
-                { v: 'MINIMAL', l: 'MÍNIMO' },
-                { v: 'LOW', l: 'BAJO' },
-                { v: 'MEDIUM', l: 'MEDIO', sel: true },
-                { v: 'HIGH', l: 'ALTO' }
-            ];
-            const opt = (items) => items.map(o => `<option value="${o.v}"${o.sel ? ' selected' : ''}>${o.l}</option>`).join('');
-            const inlineLayout = (prov, modelOpts, thinkOpts) => `
-                <div class="inline-field-selects">
-                    <div class="select-col"><label class="setup-label">Modelo</label><select id="${side}-${prov}-model">${opt(modelOpts)}</select></div>
-                    <div class="select-col"><label class="setup-label">Razonamiento</label><select id="${side}-${prov}-think">${opt(thinkOpts)}</select></div>
+            const opt = (items, sideVal) => items.map(o => `<option value="${o.v}"${(o.sel || o.v === sideVal) ? ' selected' : ''}>${o.l}</option>`).join('');
+            const inlineLayout = (prov, modelOpts, thinkOpts, isVisible = false) => `
+                <div id="${side}-${prov}-section" style="${isVisible ? '' : 'display:none;'}">
+                    <div class="inline-field-selects">
+                        <div class="select-col"><label class="setup-label">Modelo</label><select id="${side}-${prov}-model" data-searchable="true">${prov === 'gpt' ? `<option value="gpt-4o-mini">Cargando modelos...</option>` : opt(modelOpts)}</select></div>
+                        <div class="select-col"><label class="setup-label">Razonamiento</label><select id="${side}-${prov}-think">${opt(thinkOpts)}</select></div>
+                    </div>
                 </div>`;
 
             return `
@@ -1498,18 +1515,18 @@
                         <div id="${side}-ollama-status" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;white-space:nowrap;min-width:80px;text-align:center;"></div>
                     </div>
                 </div>
-                <div id="${side}-openrouter-section" style="display:none;">
+                <div id="${side}-openrouter-section">
                     <label class="setup-label">Modelo</label>
-                    <select id="${side}-openrouter-model" style="margin-bottom:8px;"></select>
+                    <select id="${side}-openrouter-model" data-searchable="true" style="margin-bottom:8px;"></select>
                     <label class="setup-label">Razonamiento</label>
-                    <select id="${side}-openrouter-think">${opt(thinkOpts)}</select>
+                    <select id="${side}-openrouter-think">${opt(THINK_OPTS)}</select>
                 </div>
-                <div id="${side}-gpt-section">${inlineLayout('gpt', gptModels, thinkOpts)}</div>
-                <div id="${side}-gemini-section" style="display:none;">${inlineLayout('gemini', geminiModels, geminiThinkOpts)}</div>
+                ${inlineLayout('gpt', [], THINK_OPTS)}
+                ${inlineLayout('gemini', GEMINI_MODELS, GEMINI_THINK_OPTS)}
                 <div id="${side}-local-section" style="display:none; margin-bottom:10px;">
                     <label class="setup-label">Modelo</label>
                     <div class="inline-field">
-                        <select id="${side}-local-model">${opt(localModels)}</select>
+                        <select id="${side}-local-model">${opt(LOCAL_MODELS)}</select>
                         <label class="setup-checkbox-label"><input type="checkbox" id="${side}-local-thinking"><span>Razonar</span></label>
                     </div>
                 </div>
@@ -1520,7 +1537,7 @@
                         <label class="setup-checkbox-label"><input type="checkbox" id="${side}-ollama-thinking"><span>Razonar</span></label>
                     </div>
                 </div>
-                <div id="${side}-humano-section" class="quote-box">
+                <div id="${side}-humano-section" class="quote-box" style="display:none;">
                     <p class="quote-text">"${quote}"<br><span class="quote-author">— ${author}</span></p>
                 </div>
             </div>`;
@@ -1533,8 +1550,44 @@
                 renderPlayerSetup('b', '♟ Negras', 'Toda la confianza que tengo se debe a mi capacidad de ver el tablero.', 'Bobby Fischer');
 
             updateCustomSelects();
+
+            const savedConfig = JSON.parse(localStorage.getItem('chess_ai_config') || '{}');
+            Object.keys(savedConfig).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    if (el.type === 'checkbox') el.checked = savedConfig[id];
+                    else el.value = savedConfig[id];
+                }
+            });
+
             toggleSide('w');
             toggleSide('b');
+
+            document.addEventListener('input', (e) => {
+                if (e.target.id && (e.target.id.includes('-key') || e.target.id.includes('-url'))) {
+                    const currentConfig = JSON.parse(localStorage.getItem('chess_ai_config') || '{}');
+                    currentConfig[e.target.id] = e.target.value;
+                    localStorage.setItem('chess_ai_config', JSON.stringify(currentConfig));
+
+                    // Si se actualiza la key de GPT, reintentar cargar modelos
+                    if (e.target.id.includes('-gpt-key')) {
+                        const side = e.target.id.startsWith('w') ? 'w' : 'b';
+                        if (document.getElementById(`${side}-provider`).value === 'gpt') {
+                            allGPTModels = []; // forzar recarga
+                            gptFetchPromise = null;
+                            fetchGPTModelsSide(side);
+                        }
+                    }
+                }
+            });
+
+            document.addEventListener('change', (e) => {
+                if (e.target.id && e.target.id.includes('-thinking')) {
+                    const currentConfig = JSON.parse(localStorage.getItem('chess_ai_config') || '{}');
+                    currentConfig[e.target.id] = e.target.checked;
+                    localStorage.setItem('chess_ai_config', JSON.stringify(currentConfig));
+                }
+            });
 
             ['w', 'b'].forEach(side => {
                 document.getElementById(`${side}-ollama-url`)?.addEventListener('input', () => {
@@ -1651,17 +1704,19 @@
                 }
             }
 
-            // Set UI labels
-            const provLabel = (s) => config[s].proveedor === 'humano' ? 'Tú' : config[s].model.replace('-preview', '');
-            document.getElementById('name-w').innerText = provLabel('w');
-            document.getElementById('name-b').innerText = provLabel('b');
-            document.getElementById('tag-w').innerText = config.w.proveedor === 'humano' ? 'Blancas (Tú)' : 'Blancas (CPU)';
-            document.getElementById('tag-b').innerText = config.b.proveedor === 'humano' ? 'Negras (Tú)' : 'Negras (CPU)';
-
+            applyPlayerLabels();
             ui.setup.style.display = "none";
             ui.main.classList.remove('hidden');
             initGame();
         };
+
+        function applyPlayerLabels() {
+            const provLabel = (s) => config[s].proveedor === 'humano' ? 'Tú' : (config[s].model?.replace('-preview', '') || 'Modelo');
+            document.getElementById('name-w').innerText = provLabel('w');
+            document.getElementById('name-b').innerText = provLabel('b');
+            document.getElementById('tag-w').innerText = config.w.proveedor === 'humano' ? 'Blancas (Tú)' : 'Blancas (CPU)';
+            document.getElementById('tag-b').innerText = config.b.proveedor === 'humano' ? 'Negras (Tú)' : 'Negras (CPU)';
+        }
 
         document.getElementById('status-card').onclick = () => {
             isPaused = !isPaused;
@@ -1670,23 +1725,24 @@
             if (!isPaused) triggerAI();
         };
 
-        function initGame() {
-            board = new Chessboard(document.getElementById("my-board"), {
-                position: FEN.start,
-                assetsUrl: "https://cdn.jsdelivr.net/npm/cm-chessboard@8/assets/",
-                style: { cssClass: "default", pieces: { type: "svgSprite", file: "pieces/standard.svg", tileSize: 40 } }
-            });
-            updateMetrics();
-            triggerAI();
+        async function checkRecoverGame() {
+            const saved = localStorage.getItem('chess_current_game');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (confirm("Se ha encontrado una partida en curso. ¿Deseas reanudarla?")) {
+                    game.load(data.fen);
+                    config.w = data.config.w;
+                    applyPlayerLabels();
+                    initGame(data.fen);
+                    return true;
+                }
+            }
+            return false;
         }
 
-        function logReasoning(isW, thought, move) {
-            const entry = document.createElement('div');
-            entry.className = `log-item ${isW ? 'white' : 'black'}`;
-            entry.innerHTML = `
-                <div class="log-move">${move}</div>
-                <div class="log-text">${thought}</div>`;
-            (isW ? ui.logsW : ui.logsB).prepend(entry);
+        function resetApp() {
+            localStorage.removeItem('chess_current_game');
+            window.location.reload();
         }
 
         function habilitarInputJugador(color) {
@@ -1713,6 +1769,79 @@
             }, colorBoard);
         }
 
+        function initGame(fen = FEN.start) {
+            board = new Chessboard(document.getElementById("my-board"), {
+                position: fen,
+                assetsUrl: "https://cdn.jsdelivr.net/npm/cm-chessboard@8/assets/",
+                style: { cssClass: "default", pieces: { type: "svgSprite", file: "pieces/standard.svg", tileSize: 40 } }
+            });
+            updateMetrics();
+            triggerAI();
+        }
+
+        function logReasoning(isW, thought, move) {
+            const entry = document.createElement('div');
+            entry.className = `log-item ${isW ? 'white' : 'black'}`;
+            entry.innerHTML = `
+                <div class="log-move">${move}</div>
+                <div class="log-text">${thought}</div>`;
+            (isW ? ui.logsW : ui.logsB).prepend(entry);
+        }
+
+        function addTokens(side, count) {
+            tokenUsage[side] += count;
+            document.getElementById(`tokens-${side}`).innerText = `${tokenUsage[side].toLocaleString()} tokens`;
+        }
+
+        function updateLiveUI(think, response, entry) {
+            const thinkDet = entry.querySelector('.think-details');
+            const thinkEl = entry.querySelector('.think-text');
+            const textEl = entry.querySelector('.log-text');
+            if (think) {
+                thinkDet.style.display = '';
+                thinkEl.textContent = think + '▌';
+            }
+            if (response) {
+                textEl.textContent = response.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
+            }
+        }
+
+        async function readSSEStream(reader, onThink, onText, type = 'openai') {
+            const decoder = new TextDecoder("utf-8");
+            let buffer = '';
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // conservar incompleto
+                for (const line of lines) {
+                    if (line.trim() === '' || line.trim() === 'data: [DONE]') continue;
+                    if (line.startsWith('data: ')) {
+                        try {
+                            const event = JSON.parse(line.substring(6));
+                            if (type === 'openai' || type === 'openrouter') {
+                                // Formato OpenAI /responses (Cualquier Delta que venga)
+                                if (event.delta) {
+                                    const isReasoning = (event.type && event.type.includes("reasoning")) || (event.item && event.item.type === "reasoning");
+                                    if (isReasoning) onThink(event.delta);
+                                    else onText(event.delta);
+                                }
+
+                                // Fallback para formato antiguo /chat/completions (OpenRouter/Ollama legacy)
+                                if (event.choices?.[0]?.delta?.content) onText(event.choices[0].delta.content);
+                                if (event.choices?.[0]?.delta?.reasoning_content) onThink(event.choices[0].delta.reasoning_content);
+
+                                // Usage / Finalización
+                                if (event.type === "response.completed" && event.response?.usage) return event.response.usage;
+                                if (event.usage) return event.usage;
+                            }
+                        } catch (e) { }
+                    }
+                }
+            }
+        }
+
         async function triggerAI(movInvalido = null, retries = 0) {
             if (isPaused || game.game_over()) {
                 if (game.game_over()) ui.gameStatus.innerText = "Fin";
@@ -1725,7 +1854,7 @@
             }
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000);
+            const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutos para modelos de razonamiento
 
             const sideConf = isW ? config.w : config.b;
             if (sideConf.proveedor === 'humano') { habilitarInputJugador(isW ? 'w' : 'b'); return; }
@@ -1741,7 +1870,7 @@
                 { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
             ];
 
-            // Crear entrada viva en el log (UNIFICADA para todos)
+            // Crear entrada viva en el log
             const liveEntry = document.createElement('div');
             liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
             liveEntry.innerHTML = `
@@ -1750,9 +1879,6 @@
                 <div class="log-text"></div>`;
             (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
             const liveMoveEl = liveEntry.querySelector('.log-move');
-            const liveThinkDet = liveEntry.querySelector('.think-details');
-            const liveThinkEl = liveEntry.querySelector('.think-text');
-            const liveTextEl = liveEntry.querySelector('.log-text');
 
             let thinkContent = '', responseText = '';
 
@@ -1760,130 +1886,67 @@
                 if (sideConf.proveedor === 'gpt') {
                     const reqBody = { model: sideConf.model, input: messages, stream: true };
 
-                    if (sideConf.think !== 'none') {
-                        reqBody.reasoning = {
-                            effort: sideConf.think,
-                            summary: "detailed"
-                        };
-                    } else {
-                        reqBody.temperature = 0.7;
-                    }
-
                     const res = await fetch('https://api.openai.com/v1/responses', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${sideConf.apiKey}`
-                        },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${sideConf.apiKey}` },
                         signal: controller.signal,
                         body: JSON.stringify(reqBody)
                     });
-                    clearTimeout(timeoutId);
                     if (!res.ok) throw new Error(`GPT Error ${res.status}`);
-
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder("utf-8");
-                    let buffer = '';
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop(); // conservar incompleto
-                        for (const line of lines) {
-                            if (line.trim() === '' || line.trim() === 'data: [DONE]') continue;
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const event = JSON.parse(line.substring(6));
-
-                                    if (event.type === "response.reasoning_summary_text.delta" && event.delta) {
-                                        thinkContent += event.delta;
-                                        liveThinkDet.style.display = '';
-                                        liveThinkEl.textContent = thinkContent + '▌';
-                                    }
-
-                                    if (event.type === "response.output_text.delta" && event.delta) {
-                                        responseText += event.delta;
-                                        liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌';
-                                    }
-                                } catch (e) { }
-                            }
-                        }
-                    }
+                    const usage = await readSSEStream(res.body.getReader(),
+                        t => { thinkContent += t; updateLiveUI(thinkContent, null, liveEntry); },
+                        tx => { responseText += tx; updateLiveUI(null, responseText, liveEntry); }
+                    );
+                    if (usage) addTokens(isW ? 'w' : 'b', (usage.input_tokens || 0) + (usage.output_tokens || 0));
                 } else if (sideConf.proveedor === 'local') {
                     const stream = await llmEngines[sideConf.model].chat.completions.create({
-                        messages, max_tokens: sideConf.thinking ? 3000 : 1024, temperature: 0.7, stream: true,
+                        messages, max_tokens: sideConf.thinking ? 2048 : 512, stream: true,
                     });
-                    let buf = '', inThink = false;
                     for await (const chunk of stream) {
-                        buf += chunk.choices[0]?.delta?.content || '';
-                        while (buf.length > 0) {
-                            if (inThink) {
-                                const e = buf.indexOf('</think>');
-                                if (e !== -1) { thinkContent += buf.slice(0, e); inThink = false; buf = buf.slice(e + 8); }
-                                else { thinkContent += buf.slice(0, -8); buf = buf.slice(-8); break; }
-                            } else {
-                                const s = buf.indexOf('<think>');
-                                if (s !== -1) { responseText += buf.slice(0, s); inThink = true; buf = buf.slice(s + 7); }
-                                else { responseText += buf; buf = ''; }
-                            }
-                        }
-                        if (thinkContent) { liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + (inThink ? '▌' : ''); }
-                        liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + (!inThink && responseText ? '▌' : '');
+                        const content = chunk.choices[0]?.delta?.content || '';
+                        responseText += content;
+                        updateLiveUI(null, responseText, liveEntry);
                     }
                 } else if (sideConf.proveedor === 'ollama') {
                     const res = await fetch(`${sideConf.ollamaUrl}/api/chat`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         signal: controller.signal,
-                        body: JSON.stringify({ model: sideConf.model, messages, stream: true, options: { temperature: 0.7 }, ...(sideConf.thinking && { think: true }) })
+                        body: JSON.stringify({ model: sideConf.model, messages, stream: true })
                     });
-                    clearTimeout(timeoutId);
                     if (!res.ok) throw new Error(`Ollama Error ${res.status}`);
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
-                    let ndjsonBuffer = '';
+                    let buf = '';
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
-                        ndjsonBuffer += decoder.decode(value, { stream: true });
-                        const lines = ndjsonBuffer.split('\n');
-                        ndjsonBuffer = lines.pop();
+                        buf += decoder.decode(value, { stream: true });
+                        const lines = buf.split('\n');
+                        buf = lines.pop();
                         for (const line of lines) {
                             if (!line.trim()) continue;
-                            try {
-                                const json = JSON.parse(line);
-                                if (json.done) {
-                                    const total = (json.prompt_eval_count || 0) + (json.eval_count || 0);
-                                    tokenUsage[isW ? 'w' : 'b'] += total;
-                                    document.getElementById(`tokens-${isW ? 'w' : 'b'}`).innerText = `${tokenUsage[isW ? 'w' : 'b'].toLocaleString()} tokens`;
-                                }
-                                const msg = json.message || {};
-                                if (json.message?.thinking) { thinkContent += json.message.thinking; liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + '▌'; }
-                                if (json.message?.content) { responseText += json.message.content; liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌'; }
-                            } catch { continue; }
+                            const json = JSON.parse(line);
+                            if (json.message?.content) {
+                                responseText += json.message.content;
+                                updateLiveUI(null, responseText, liveEntry);
+                            }
+                            if (json.done) addTokens(isW ? 'w' : 'b', (json.prompt_eval_count || 0) + (json.eval_count || 0));
                         }
                     }
                 } else if (sideConf.proveedor === 'gemini') {
-                    const model = (isW ? genAI_w : genAI_b).getGenerativeModel({
-                        model: sideConf.model,
-                        generationConfig: { thinkingConfig: { includeThoughts: true, thinkingLevel: sideConf.think } }
-                    });
-                    const prompt = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
-                    const result = await model.generateContentStream(prompt);
+                    const model = (isW ? genAI_w : genAI_b).getGenerativeModel({ model: sideConf.model });
+                    const result = await model.generateContentStream(messages.map(m => m.content).join('\n'));
                     for await (const chunk of result.stream) {
-                        for (const part of chunk.candidates?.[0]?.content?.parts || []) {
-                            if (part.thought) { thinkContent += part.text || ''; liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + '▌'; }
-                            else if (part.text) { responseText += part.text; liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + '▌'; }
-                        }
+                        responseText += chunk.text();
+                        updateLiveUI(null, responseText, liveEntry);
                     }
                     const usage = (await result.response).usageMetadata;
-                    if (usage?.totalTokenCount) {
-                        tokenUsage[isW ? 'w' : 'b'] += usage.totalTokenCount;
-                        document.getElementById(`tokens-${isW ? 'w' : 'b'}`).innerText = `${tokenUsage[isW ? 'w' : 'b'].toLocaleString()} tokens`;
-                    }
+                    if (usage?.totalTokenCount) addTokens(isW ? 'w' : 'b', usage.totalTokenCount);
                 } else if (sideConf.proveedor === 'openrouter') {
-                    const reqBody = { model: sideConf.model, messages: messages, stream: true, temperature: 0.7 };
-                    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    const reqBody = { model: sideConf.model, input: messages, stream: true };
+                    if (sideConf.think !== 'none') reqBody.reasoning = { effort: sideConf.think };
+
+                    const res = await fetch('https://openrouter.ai/api/v1/responses', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1894,67 +1957,25 @@
                         signal: controller.signal,
                         body: JSON.stringify(reqBody)
                     });
-                    clearTimeout(timeoutId);
-                    
-                    if (!res.ok) {
-                        const errorData = await res.json().catch(() => ({}));
-                        if (errorData.error?.message?.includes("No endpoints available matching your guardrail restrictions")) {
-                            alert("Configuración de OpenRouter Requerida:\n\nDebes activar 'Enable free endpoints that may publish prompts' en https://openrouter.ai/settings/privacy para que los modelos gratuitos funcionen.");
-                        }
-                        throw new Error(`OpenRouter Error ${res.status}`);
-                    }
-
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder("utf-8");
-                    let buffer = '';
-                    let inThink = false;
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        buffer += decoder.decode(value, { stream: true });
-                        const lines = buffer.split('\n');
-                        buffer = lines.pop(); 
-                        for (const line of lines) {
-                            if (line.trim() === '' || line.trim() === 'data: [DONE]') continue;
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const event = JSON.parse(line.substring(6));
-                                    const delta = event.choices?.[0]?.delta || {};
-                                    let c = delta.content || '';
-                                    if (delta.reasoning) {
-                                        thinkContent += delta.reasoning;
-                                        liveThinkDet.style.display = '';
-                                        liveThinkEl.textContent = thinkContent + '▌';
-                                    }
-                                    if (c) {
-                                        if (inThink) {
-                                            const e = c.indexOf('</think>');
-                                            if (e !== -1) { thinkContent += c.slice(0, e); inThink = false; c = c.slice(e + 8); }
-                                            else { thinkContent += c; c = ''; }
-                                        } else {
-                                            const s = c.indexOf('<think>');
-                                            if (s !== -1) { responseText += c.slice(0, s); inThink = true; c = c.slice(s + 7); }
-                                            if (inThink) {
-                                                const e = c.indexOf('</think>');
-                                                if (e !== -1) { thinkContent += c.slice(0, e); inThink = false; c = c.slice(e + 8); }
-                                                else { thinkContent += c; c = ''; }
-                                            } else {
-                                                responseText += c;
-                                            }
-                                        }
-                                        if (thinkContent && !delta.reasoning) { liveThinkDet.style.display = ''; liveThinkEl.textContent = thinkContent + (inThink ? '▌' : ''); }
-                                        if (responseText) { liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trimStart() + (!inThink ? '▌' : ''); }
-                                    }
-                                } catch (e) {}
-                            }
-                        }
-                    }
+                    if (!res.ok) throw new Error(`OpenRouter Error ${res.status}`);
+                    const usage = await readSSEStream(res.body.getReader(),
+                        t => { thinkContent += t; updateLiveUI(thinkContent, null, liveEntry); },
+                        tx => { responseText += tx; updateLiveUI(null, responseText, liveEntry); },
+                        'openrouter'
+                    );
+                    if (usage) addTokens(isW ? 'w' : 'b', (usage.input_tokens || usage.prompt_tokens || 0) + (usage.output_tokens || usage.completion_tokens || 0));
                 }
 
                 const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
                 const moveStr = moveMatch ? moveMatch[1].trim() : "";
+
                 liveMoveEl.style.opacity = '';
                 liveMoveEl.textContent = moveStr || '??';
+
+                const liveThinkDet = liveEntry.querySelector('.think-details');
+                const liveThinkEl = liveEntry.querySelector('.think-text');
+                const liveTextEl = liveEntry.querySelector('.log-text');
+
                 liveThinkEl.textContent = thinkContent.trim();
                 liveTextEl.textContent = responseText.replace(/\{\{.*?\}\}/g, '').trim();
                 if (!thinkContent.trim()) liveThinkDet.style.display = 'none';
@@ -1969,30 +1990,40 @@
                 }
             } catch (e) {
                 clearTimeout(timeoutId);
+                if (e.name === 'AbortError') {
+                    console.warn("IA excedió el tiempo límite (Timeout).");
+                    ejecutarMovimientoAleatorio(isW, true);
+                    return;
+                }
+                
                 console.error("Error en IA:", e);
-                if (e.name === 'AbortError' || retries >= 2) {
+                if (retries >= 2) {
                     ejecutarMovimientoAleatorio(isW);
                     return;
                 }
-                liveEntry.remove();
+                if (liveEntry && liveEntry.parentNode) liveEntry.remove();
                 setTimeout(() => triggerAI(null, retries + 1), 2000);
             }
         }
 
-        function ejecutarMovimientoAleatorio(isW) {
+        function ejecutarMovimientoAleatorio(isW, isTimeout = false) {
             const moves = game.moves();
             if (moves.length === 0) return;
             // Limpiar log de "pensando" actual
             const logContainer = isW ? ui.logsW : ui.logsB;
-            if (logContainer.firstChild) logContainer.firstChild.remove();
+            if (logContainer.firstElementChild && (logContainer.firstElementChild.innerText.includes('pensando') || isTimeout)) {
+                logContainer.firstElementChild.remove();
+            }
 
             const fallback = moves[Math.floor(Math.random() * moves.length)];
+            const reason = isTimeout ? "(Timeout)" : "(Error)";
             game.move(fallback);
             board.setPosition(game.fen(), true);
             updateMetrics();
+            
             const entry = document.createElement('div');
             entry.className = `log-item ${isW ? 'white' : 'black'}`;
-            entry.innerHTML = `<div class="log-move">${fallback} <span style="color:#ef4444;font-size:0.65rem">(Timeout - Aleatorio)</span></div>`;
+            entry.innerHTML = `<div class="log-move">${fallback} <span style="color:#f59e0b;font-size:0.65rem">${reason} - Aleatorio</span></div>`;
             logContainer.prepend(entry);
             setTimeout(() => triggerAI(), 1000);
         }
@@ -2011,7 +2042,18 @@
             ui.turnCount.innerText = Math.floor(game.history().length / 2) + 1;
             const total = scoreW + scoreB;
             ui.advantageBar.style.width = (total === 0 ? 50 : (scoreB / total) * 100) + "%";
+
+            const gameState = {
+                fen: game.fen(),
+                history: game.history(),
+                config: { w: config.w, b: config.b }
+            };
+            localStorage.setItem('chess_current_game', JSON.stringify(gameState));
         }
+
+        window.resetApp = resetApp;
+
+        checkRecoverGame();
     </script>
 </body>
 
