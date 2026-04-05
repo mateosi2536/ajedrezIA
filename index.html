@@ -1417,8 +1417,7 @@
         const GEMINI_THINK_OPTS = [
             { v: 'high', l: 'Alto', sel: true },
             { v: 'medium', l: 'Medio' },
-            { v: 'low', l: 'Bajo' },
-            { v: 'minimal', l: 'Mínimo' }
+            { v: 'low', l: 'Bajo' }
         ];
         const GPT_MODELS = [
             { v: 'gpt-5.4-pro', l: 'GPT-5.4 Pro' },
@@ -1814,9 +1813,10 @@
 
             const legalMoves = game.moves();
             const ejemplo = legalMoves[0];
+            const rival = isW ? "Negras" : "Blancas";
             const messages = [
-                { role: 'system', content: `Eres un motor de ajedrez. Elige un movimiento de la lista y responde ÚNICAMENTE con ese movimiento entre dobles llaves. Ejemplo: {{${ejemplo}}}` },
-                { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}\n\nResponde ÚNICAMENTE con el formato {{movimiento}}. Ejemplo si eligieras ${ejemplo}: {{${ejemplo}}}${advertencia}` }
+                { role: 'system', content: `Eres un motor de ajedrez despiadado con personalidad intimidante. Elige el mejor movimiento y responde con DOS cosas:\n1. El movimiento entre dobles llaves: {{movimiento}}\n2. Una frase corta e ingeniosa (máx. 15 palabras) para intimidar o provocar a ${rival}, basada en la posición real del tablero.\n\nEjemplo de respuesta: {{${ejemplo}}} "Tu defensa se derrumba pieza a pieza."\n\nEl movimiento DEBE estar en la lista de movimientos legales.` },
+                { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}${advertencia}` }
             ];
 
             // Crear entrada viva en el log
