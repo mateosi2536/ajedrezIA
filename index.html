@@ -1410,10 +1410,13 @@
         ];
         const THINK_OPTS = [
             { v: 'none', l: 'Ninguno' },
+            { v: 'minimal', l: 'Mínimo' },
             { v: 'low', l: 'Bajo' },
             { v: 'medium', l: 'Medio', sel: true },
-            { v: 'high', l: 'Alto' }
+            { v: 'high', l: 'Alto' },
+            { v: 'xhigh', l: 'Máximo' }
         ];
+        const OR_REASONING_TOKENS = { minimal: 256, low: 512, medium: 1024, high: 1536, xhigh: 2000 };
         const GEMINI_THINK_OPTS = [
             { v: 'high', l: 'Alto', sel: true },
             { v: 'medium', l: 'Medio' },
@@ -1526,9 +1529,13 @@
             });
 
             document.addEventListener('change', (e) => {
-                if (e.target.id && e.target.id.includes('-thinking')) {
+                if (!e.target.id) return;
+                const id = e.target.id;
+                const tracked = id.includes('-thinking') || id.includes('-provider') ||
+                                id.includes('-model') || id.includes('-think');
+                if (tracked) {
                     const currentConfig = JSON.parse(localStorage.getItem('chess_ai_config') || '{}');
-                    currentConfig[e.target.id] = e.target.checked;
+                    currentConfig[id] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
                     localStorage.setItem('chess_ai_config', JSON.stringify(currentConfig));
                 }
             });
@@ -1671,7 +1678,10 @@
                 if (confirm("Se ha encontrado una partida en curso. ¿Deseas reanudarla?")) {
                     game.load(data.fen);
                     config.w = data.config.w;
+                    config.b = data.config.b;
                     applyPlayerLabels();
+                    ui.setup.style.display = "none";
+                    ui.main.classList.remove('hidden');
                     initGame(data.fen);
                     return true;
                 }
@@ -1912,8 +1922,17 @@
                     }
                     if (totalTokens) addTokens(isW ? 'w' : 'b', totalTokens);
                 } else if (sideConf.proveedor === 'openrouter') {
-                    const reqBody = { model: sideConf.model, input: messages, stream: true };
-                    if (sideConf.think !== 'none') reqBody.reasoning = { effort: sideConf.think };
+                    const orInput = messages.map(m => ({
+                        type: 'message',
+                        role: m.role,
+                        content: [{ type: 'input_text', text: m.content }]
+                    }));
+                    const reqBody = { model: sideConf.model, input: orInput, stream: true };
+                    if (sideConf.think === 'none') {
+                        reqBody.reasoning = { enabled: false };
+                    } else {
+                        reqBody.reasoning = { enabled: true, max_tokens: OR_REASONING_TOKENS[sideConf.think] };
+                    }
 
                     const res = await fetch('https://openrouter.ai/api/v1/responses', {
                         method: 'POST',
