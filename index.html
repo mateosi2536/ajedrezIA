@@ -1043,12 +1043,6 @@
             });
             if (val === 'ollama') fetchOllamaModelsSide(side);
             if (val === 'openrouter') fetchOpenRouterModelsSide(side);
-            if (val === 'gpt') {
-                fetchGPTModelsSide(side);
-                const gptModel = document.getElementById(`${side}-gpt-model`).value;
-                const thinkCol = document.querySelector(`#${side}-gpt-section .select-col:last-child`);
-                if (thinkCol) thinkCol.style.display = gptModel.startsWith('gpt-5') ? 'block' : 'none';
-            }
 
             // 1. Sincronizar alertas (CSS se encarga de su altura)
             updateAlerts();
@@ -1281,61 +1275,6 @@
             }
         }
 
-        let allGPTModels = [];
-        let gptFetchPromise = null;
-
-        async function fetchGPTModelsSide(side) {
-            const select = document.getElementById(`${side}-gpt-model`);
-            const key = document.getElementById(`${side}-gpt-key`)?.value.trim();
-
-            if (!select || !key) return;
-            if (select.options.length > 1) { // 1 porque suele tener el default
-                updateCustomSelects();
-                return;
-            }
-
-            try {
-                if (!allGPTModels.length) {
-                    if (!gptFetchPromise) {
-                        gptFetchPromise = fetch('https://api.openai.com/v1/models', {
-                            headers: { 'Authorization': `Bearer ${key}` }
-                        }).then(r => r.json());
-                    }
-                    const data = await gptFetchPromise;
-                    if (data.error) throw new Error(data.error.message);
-                    allGPTModels = data.data.filter(m => {
-                        const id = m.id.toLowerCase();
-                        if (id.includes('image') || id.includes('dall-e') || id.includes('tts') || id.includes('whisper') || id.includes('moderation') || id.includes('audio') || id.includes('realtime')) return false;
-                        return id.includes('gpt') || id.startsWith('o1') || id.startsWith('o3') || id.startsWith('o4');
-                    });
-                }
-
-                select.innerHTML = '';
-                const defaultModel = "gpt-4o-mini";
-
-                allGPTModels.sort((a, b) => a.id.localeCompare(b.id)).forEach(m => {
-                    const o = document.createElement('option');
-                    o.value = m.id;
-                    o.textContent = m.id;
-                    if (m.id === defaultModel) o.selected = true;
-                    select.appendChild(o);
-                });
-
-                updateCustomSelects();
-
-                // Añadir listener para ocultar razonamiento si no es gpt-5
-                select.onchange = () => {
-                    const thinkCol = document.querySelector(`#${side}-gpt-section .select-col:last-child`);
-                    if (thinkCol) thinkCol.style.display = select.value.startsWith('gpt-5') ? 'block' : 'none';
-                    updateCardHeight();
-                };
-            } catch (e) {
-                console.error('Error fetching OpenAI models:', e);
-                // Si hay error (probablemente por la key), no limpiamos el select para permitir reintento
-                updateCustomSelects();
-            }
-        }
-
         // --- CUSTOM SELECTS ---
         function updateCustomSelects() {
             document.querySelectorAll('select').forEach(select => {
@@ -1460,9 +1399,9 @@
 
 
         const GEMINI_MODELS = [
-            { v: 'gemini-2.0-flash', l: 'Gemini 2.0 Flash', sel: true },
-            { v: 'gemini-2.0-flash-lite-preview', l: 'Gemini 2.0 Flash Lite' },
-            { v: 'gemini-2.0-pro-exp-02-05', l: 'Gemini 2.0 Pro Exp' }
+            { v: 'gemini-3.1-pro-preview', l: 'Gemini 3.1 Pro', sel: true },
+            { v: 'gemini-3-flash-preview', l: 'Gemini 3 Flash' },
+            { v: 'gemini-3.1-flash-lite-preview', l: 'Gemini 3.1 Flash Lite' }
         ];
         const LOCAL_MODELS = [
             { v: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', l: 'Qwen2.5 0.5B (~300 MB)' },
@@ -1476,9 +1415,24 @@
             { v: 'high', l: 'Alto' }
         ];
         const GEMINI_THINK_OPTS = [
-            { v: '1000', l: 'MÍNIMO' },
-            { v: '4000', l: 'MEDIO', sel: true },
-            { v: '16000', l: 'ALTO' }
+            { v: 'high', l: 'Alto', sel: true },
+            { v: 'medium', l: 'Medio' },
+            { v: 'low', l: 'Bajo' },
+            { v: 'minimal', l: 'Mínimo' }
+        ];
+        const GPT_MODELS = [
+            { v: 'gpt-5.4-pro', l: 'GPT-5.4 Pro' },
+            { v: 'gpt-5.4', l: 'GPT-5.4' },
+            { v: 'gpt-5.4-mini', l: 'GPT-5.4 Mini', sel: true },
+            { v: 'gpt-5.4-nano', l: 'GPT-5.4 Nano' }
+        ];
+        const GPT_THINK_OPTS = [
+            { v: 'none', l: 'Ninguno' },
+            { v: 'minimal', l: 'Mínimo' },
+            { v: 'low', l: 'Bajo' },
+            { v: 'medium', l: 'Medio', sel: true },
+            { v: 'high', l: 'Alto' },
+            { v: 'xhigh', l: 'Máximo' }
         ];
 
         function renderPlayerSetup(side, title, quote, author) {
@@ -1486,7 +1440,7 @@
             const inlineLayout = (prov, modelOpts, thinkOpts, isVisible = false) => `
                 <div id="${side}-${prov}-section" style="${isVisible ? '' : 'display:none;'}">
                     <div class="inline-field-selects">
-                        <div class="select-col"><label class="setup-label">Modelo</label><select id="${side}-${prov}-model" data-searchable="true">${prov === 'gpt' ? `<option value="gpt-4o-mini">Cargando modelos...</option>` : opt(modelOpts)}</select></div>
+                        <div class="select-col"><label class="setup-label">Modelo</label><select id="${side}-${prov}-model">${opt(modelOpts)}</select></div>
                         <div class="select-col"><label class="setup-label">Razonamiento</label><select id="${side}-${prov}-think">${opt(thinkOpts)}</select></div>
                     </div>
                 </div>`;
@@ -1521,7 +1475,7 @@
                     <label class="setup-label">Razonamiento</label>
                     <select id="${side}-openrouter-think">${opt(THINK_OPTS)}</select>
                 </div>
-                ${inlineLayout('gpt', [], THINK_OPTS)}
+                ${inlineLayout('gpt', GPT_MODELS, GPT_THINK_OPTS)}
                 ${inlineLayout('gemini', GEMINI_MODELS, GEMINI_THINK_OPTS)}
                 <div id="${side}-local-section" style="display:none; margin-bottom:10px;">
                     <label class="setup-label">Modelo</label>
@@ -1569,15 +1523,6 @@
                     currentConfig[e.target.id] = e.target.value;
                     localStorage.setItem('chess_ai_config', JSON.stringify(currentConfig));
 
-                    // Si se actualiza la key de GPT, reintentar cargar modelos
-                    if (e.target.id.includes('-gpt-key')) {
-                        const side = e.target.id.startsWith('w') ? 'w' : 'b';
-                        if (document.getElementById(`${side}-provider`).value === 'gpt') {
-                            allGPTModels = []; // forzar recarga
-                            gptFetchPromise = null;
-                            fetchGPTModelsSide(side);
-                        }
-                    }
                 }
             });
 
@@ -1599,7 +1544,7 @@
     </script>
     <script type="module">
         import { Chessboard, FEN, INPUT_EVENT_TYPE, COLOR } from "https://cdn.jsdelivr.net/npm/cm-chessboard@8/src/Chessboard.js";
-        import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+        import { GoogleGenAI } from "https://esm.run/@google/genai";
         import * as webllm from "https://esm.run/@mlc-ai/web-llm";
 
         let game = new Chess();
@@ -1612,7 +1557,6 @@
             w: { proveedor: "gpt", apiKey: "", ollamaUrl: "", model: "", think: "", thinking: false },
             b: { proveedor: "gpt", apiKey: "", ollamaUrl: "", model: "", think: "", thinking: false }
         };
-        let genAI_w = null, genAI_b = null;
 
         function getPlayerConfig(side) {
             const prov = document.getElementById(`${side}-provider`).value;
@@ -1634,10 +1578,6 @@
                 if (!conf.apiKey) {
                     alert(`Falta API Key de ${prov} para ${side === 'w' ? 'Blancas' : 'Negras'}.`);
                     return null;
-                }
-                if (prov === 'gemini') {
-                    if (side === 'w' && (!genAI_w || genAI_w.apiKey !== conf.apiKey)) genAI_w = new GoogleGenerativeAI(conf.apiKey);
-                    if (side === 'b' && (!genAI_b || genAI_b.apiKey !== conf.apiKey)) genAI_b = new GoogleGenerativeAI(conf.apiKey);
                 }
             } else if (prov === 'ollama') {
                 if (!conf.model) {
@@ -1788,6 +1728,15 @@
             (isW ? ui.logsW : ui.logsB).prepend(entry);
         }
 
+        function extractLastMove(text) {
+            if (!text) return null;
+            const matches = Array.from(text.matchAll(/\{\{([^\}]+)\}\}/g));
+            if (matches.length > 0) {
+                return matches[matches.length - 1][1].trim();
+            }
+            return null;
+        }
+
         function addTokens(side, count) {
             tokenUsage[side] += count;
             document.getElementById(`tokens-${side}`).innerText = `${tokenUsage[side].toLocaleString()} tokens`;
@@ -1885,6 +1834,7 @@
             try {
                 if (sideConf.proveedor === 'gpt') {
                     const reqBody = { model: sideConf.model, input: messages, stream: true };
+                    reqBody.reasoning = { effort: sideConf.think, summary: "auto" };
 
                     const res = await fetch('https://api.openai.com/v1/responses', {
                         method: 'POST',
@@ -1934,14 +1884,33 @@
                         }
                     }
                 } else if (sideConf.proveedor === 'gemini') {
-                    const model = (isW ? genAI_w : genAI_b).getGenerativeModel({ model: sideConf.model });
-                    const result = await model.generateContentStream(messages.map(m => m.content).join('\n'));
-                    for await (const chunk of result.stream) {
-                        responseText += chunk.text();
-                        updateLiveUI(null, responseText, liveEntry);
+                    const genAI = new GoogleGenAI({ apiKey: sideConf.apiKey });
+                    const prompt = messages.map(m => m.content).join('\n');
+                    const stream = await genAI.models.generateContentStream({
+                        model: sideConf.model,
+                        contents: prompt,
+                        config: {
+                            thinkingConfig: {
+                                includeThoughts: true,
+                                thinkingLevel: sideConf.think
+                            }
+                        }
+                    });
+                    let totalTokens = 0;
+                    for await (const chunk of stream) {
+                        if (chunk.usageMetadata?.totalTokenCount) totalTokens = chunk.usageMetadata.totalTokenCount;
+                        for (const part of (chunk.candidates?.[0]?.content?.parts ?? [])) {
+                            if (!part.text) continue;
+                            if (part.thought) {
+                                thinkContent += part.text;
+                                updateLiveUI(thinkContent, null, liveEntry);
+                            } else {
+                                responseText += part.text;
+                                updateLiveUI(null, responseText, liveEntry);
+                            }
+                        }
                     }
-                    const usage = (await result.response).usageMetadata;
-                    if (usage?.totalTokenCount) addTokens(isW ? 'w' : 'b', usage.totalTokenCount);
+                    if (totalTokens) addTokens(isW ? 'w' : 'b', totalTokens);
                 } else if (sideConf.proveedor === 'openrouter') {
                     const reqBody = { model: sideConf.model, input: messages, stream: true };
                     if (sideConf.think !== 'none') reqBody.reasoning = { effort: sideConf.think };
@@ -1966,8 +1935,7 @@
                     if (usage) addTokens(isW ? 'w' : 'b', (usage.input_tokens || usage.prompt_tokens || 0) + (usage.output_tokens || usage.completion_tokens || 0));
                 }
 
-                const moveMatch = responseText.match(/\{\{([^\}]+)\}\}/);
-                const moveStr = moveMatch ? moveMatch[1].trim() : "";
+                const moveStr = extractLastMove(responseText) || extractLastMove(thinkContent) || "";
 
                 liveMoveEl.style.opacity = '';
                 liveMoveEl.textContent = moveStr || '??';
@@ -1991,11 +1959,24 @@
             } catch (e) {
                 clearTimeout(timeoutId);
                 if (e.name === 'AbortError') {
-                    console.warn("IA excedió el tiempo límite (Timeout).");
+                    console.warn("IA excedió el tiempo límite (Timeout). Intentando recuperar último movimiento...");
+                    const lastMove = extractLastMove(responseText) || extractLastMove(thinkContent);
+                    
+                    if (lastMove && game.move(lastMove, { sloppy: true })) {
+                        console.log("Movimiento recuperado post-timeout:", lastMove);
+                        liveMoveEl.style.opacity = '';
+                        liveMoveEl.textContent = lastMove;
+                        liveEntry.querySelector('.log-text').textContent = "[Recuperado tras Timeout]";
+                        await board.setPosition(game.fen(), true);
+                        updateMetrics();
+                        setTimeout(() => triggerAI(), 1000);
+                        return;
+                    }
+
                     ejecutarMovimientoAleatorio(isW, true);
                     return;
                 }
-                
+
                 console.error("Error en IA:", e);
                 if (retries >= 2) {
                     ejecutarMovimientoAleatorio(isW);
@@ -2020,7 +2001,7 @@
             game.move(fallback);
             board.setPosition(game.fen(), true);
             updateMetrics();
-            
+
             const entry = document.createElement('div');
             entry.className = `log-item ${isW ? 'white' : 'black'}`;
             entry.innerHTML = `<div class="log-move">${fallback} <span style="color:#f59e0b;font-size:0.65rem">${reason} - Aleatorio</span></div>`;
