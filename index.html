@@ -1424,6 +1424,13 @@
             { v: 'xhigh', l: 'Máximo' }
         ];
         const OR_REASONING_TOKENS = { minimal: 256, low: 512, medium: 1024, high: 1536, xhigh: 2000 };
+        const OLLAMA_THINK_OPTS = [
+            { v: 'none', l: 'Ninguno' },
+            { v: 'low', l: 'Bajo' },
+            { v: 'medium', l: 'Medio', sel: true },
+            { v: 'high', l: 'Alto' }
+        ];
+        const OLLAMA_EFFORT_MAP = { none: 'none', minimal: 'low', low: 'low', medium: 'medium', high: 'high', xhigh: 'high' };
         const GEMINI_THINK_OPTS = [
             { v: 'high', l: 'Alto', sel: true },
             { v: 'medium', l: 'Medio' },
@@ -1494,10 +1501,9 @@
                     </div>
                 </div>
                 <div id="${side}-ollama-section" style="display:none; margin-bottom:10px;">
-                    <label class="setup-label">Modelo</label>
-                    <div class="inline-field">
-                        <select id="${side}-ollama-model"></select>
-                        <label class="setup-checkbox-label"><input type="checkbox" id="${side}-ollama-thinking"><span>Razonar</span></label>
+                    <div class="inline-field-selects">
+                        <div class="select-col"><label class="setup-label">Modelo</label><select id="${side}-ollama-model"></select></div>
+                        <div class="select-col"><label class="setup-label">Razonamiento</label><select id="${side}-ollama-think">${opt(OLLAMA_THINK_OPTS)}</select></div>
                     </div>
                 </div>
                 <div id="${side}-humano-section" class="quote-box" style="display:none;">
@@ -1795,9 +1801,9 @@
                                     else onText(event.delta);
                                 }
 
-                                // Fallback para formato antiguo /chat/completions (OpenRouter/Ollama legacy)
+                                // Formato /chat/completions (Ollama)
                                 if (event.choices?.[0]?.delta?.content) onText(event.choices[0].delta.content);
-                                if (event.choices?.[0]?.delta?.reasoning_content) onThink(event.choices[0].delta.reasoning_content);
+                                if (event.choices?.[0]?.delta?.reasoning) onThink(event.choices[0].delta.reasoning);
 
                                 // Usage / Finalización
                                 if (event.type === "response.completed" && event.response?.usage) return event.response.usage;
@@ -1833,8 +1839,12 @@
             const legalMoves = game.moves();
             const ejemplo = legalMoves[0];
             const rival = isW ? "Negras" : "Blancas";
+            const hasThinking = sideConf.think && sideConf.think !== 'none';
+            const systemPrompt = hasThinking
+                ? `Eres un motor de ajedrez despiadado. Usa tu cadena de pensamiento para analizar la posición y elegir el mejor movimiento. Luego responde con:\n1. El movimiento entre dobles llaves: {{movimiento}}\n2. Una frase breve y provocativa hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Tu posición ya huele a derrota.\n\nNada más.`
+                : `Eres un motor de ajedrez despiadado. Elige el mejor movimiento legal de la lista y responde ÚNICAMENTE con:\n{{movimiento}} Una frase provocativa hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Tu posición ya huele a derrota.\n\nNada más. Sin análisis. Sin explicaciones.`;
             const messages = [
-                { role: 'system', content: `Eres un motor de ajedrez despiadado. Elige el mejor movimiento legal y responde con:\n1. El movimiento entre dobles llaves: {{movimiento}}\n2. Un párrafo breve: explica brevemente tu razonamiento y remata con algo provocativo hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Este movimiento presiona el centro y te deja sin opciones. Tu posición ya huele a derrota.\n\nNada más.` },
+                { role: 'system', content: systemPrompt },
                 { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}${advertencia}` }
             ];
 
@@ -1879,35 +1889,19 @@
                         updateLiveUI(null, responseText, liveEntry);
                     }
                 } else if (sideConf.proveedor === 'ollama') {
-                    const res = await fetch(`${sideConf.ollamaUrl}/api/chat`, {
+                    const effort = OLLAMA_EFFORT_MAP[sideConf.think] || 'none';
+                    const res = await fetch(`${sideConf.ollamaUrl}/v1/chat/completions`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         signal: controller.signal,
-                        body: JSON.stringify({ model: sideConf.model, messages, stream: true, think: sideConf.thinking })
+                        body: JSON.stringify({ model: sideConf.model, messages, stream: true, reasoning_effort: effort })
                     });
                     if (!res.ok) throw new Error(`Ollama Error ${res.status}`);
                     const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let buf = '';
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        buf += decoder.decode(value, { stream: true });
-                        const lines = buf.split('\n');
-                        buf = lines.pop();
-                        for (const line of lines) {
-                            if (!line.trim()) continue;
-                            const json = JSON.parse(line);
-                            if (json.message?.thinking) {
-                                thinkContent += json.message.thinking;
-                                updateLiveUI(thinkContent, null, liveEntry);
-                            }
-                            if (json.message?.content) {
-                                responseText += json.message.content;
-                                updateLiveUI(null, responseText, liveEntry);
-                            }
-                            if (json.done) addTokens(isW ? 'w' : 'b', (json.prompt_eval_count || 0) + (json.eval_count || 0));
-                        }
-                    }
+                    await readSSEStream(reader,
+                        t => { thinkContent += t; updateLiveUI(thinkContent, null, liveEntry); },
+                        t => { responseText += t; updateLiveUI(null, responseText, liveEntry); },
+                        'openai'
+                    );
                 } else if (sideConf.proveedor === 'gemini') {
                     const genAI = new GoogleGenAI({ apiKey: sideConf.apiKey });
                     const prompt = messages.map(m => m.content).join('\n');
