@@ -668,14 +668,21 @@
             }
         }
 
+        .log-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .log-move {
             font-weight: 700;
+            white-space: nowrap;
         }
 
         .log-text {
             font-style: italic;
             opacity: 0.8;
-            margin-top: 4px;
             white-space: pre-wrap;
         }
 
@@ -1732,8 +1739,10 @@
             const entry = document.createElement('div');
             entry.className = `log-item ${isW ? 'white' : 'black'}`;
             entry.innerHTML = `
-                <div class="log-move">${move}</div>
-                <div class="log-text">${thought}</div>`;
+                <div class="log-header">
+                    <div class="log-move">${move}</div>
+                    <div class="log-text">${thought}</div>
+                </div>`;
             (isW ? ui.logsW : ui.logsB).prepend(entry);
         }
 
@@ -1825,7 +1834,7 @@
             const ejemplo = legalMoves[0];
             const rival = isW ? "Negras" : "Blancas";
             const messages = [
-                { role: 'system', content: `Eres un motor de ajedrez despiadado con personalidad intimidante. Elige el mejor movimiento y responde con DOS cosas:\n1. El movimiento entre dobles llaves: {{movimiento}}\n2. Una frase corta e ingeniosa (máx. 15 palabras) para intimidar o provocar a ${rival}, basada en la posición real del tablero.\n\nEjemplo de respuesta: {{${ejemplo}}} "Tu defensa se derrumba pieza a pieza."\n\nEl movimiento DEBE estar en la lista de movimientos legales.` },
+                { role: 'system', content: `Eres un motor de ajedrez despiadado. Elige el mejor movimiento legal y responde con:\n1. El movimiento entre dobles llaves: {{movimiento}}\n2. Un párrafo breve: explica brevemente tu razonamiento y remata con algo provocativo hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Este movimiento presiona el centro y te deja sin opciones. Tu posición ya huele a derrota.\n\nNada más.` },
                 { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}${advertencia}` }
             ];
 
@@ -1833,9 +1842,11 @@
             const liveEntry = document.createElement('div');
             liveEntry.className = `log-item ${isW ? 'white' : 'black'}`;
             liveEntry.innerHTML = `
-                <div class="log-move" style="opacity:0.4">pensando...</div>
-                <details class="think-details" style="display:none"><summary>▸ Ver razonamiento</summary><div class="think-text"></div></details>
-                <div class="log-text"></div>`;
+                <div class="log-header">
+                    <div class="log-move" style="opacity:0.4">pensando...</div>
+                    <div class="log-text"></div>
+                </div>
+                <details class="think-details" style="display:none"><summary>▸ Ver razonamiento</summary><div class="think-text"></div></details>`;
             (isW ? ui.logsW : ui.logsB).prepend(liveEntry);
             const liveMoveEl = liveEntry.querySelector('.log-move');
 
