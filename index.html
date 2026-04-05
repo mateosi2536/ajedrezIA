@@ -1841,8 +1841,8 @@
             const rival = isW ? "Negras" : "Blancas";
             const hasThinking = sideConf.think && sideConf.think !== 'none';
             const systemPrompt = hasThinking
-                ? `Eres un motor de ajedrez despiadado. Usa tu cadena de pensamiento para analizar la posición y elegir el mejor movimiento. Luego responde con:\n1. El movimiento entre dobles llaves: {{movimiento}}\n2. Una frase breve y provocativa hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Tu posición ya huele a derrota.\n\nNada más.`
-                : `Eres un motor de ajedrez despiadado. Elige el mejor movimiento legal de la lista y responde ÚNICAMENTE con:\n{{movimiento}} Una frase provocativa hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Tu posición ya huele a derrota.\n\nNada más. Sin análisis. Sin explicaciones.`;
+                ? `Eres un motor de ajedrez. Razona internamente todo lo que necesites. Tu respuesta visible debe ser EXACTAMENTE:\n{{movimiento}} frase provocativa hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Tu posición ya huele a derrota.\n\nNada más en la respuesta.`
+                : `Eres un motor de ajedrez. Tu respuesta debe ser EXACTAMENTE:\n{{movimiento}} frase provocativa hacia ${rival}.\n\nEjemplo: {{${ejemplo}}} Tu posición ya huele a derrota.\n\nPROHIBIDO: análisis, explicaciones, listas, cálculos, razonamiento. Solo el formato de arriba.`;
             const messages = [
                 { role: 'system', content: systemPrompt },
                 { role: 'user', content: `FEN: ${game.fen()}\nJuegas con: ${color}\nMovimientos legales: ${legalMoves.join(', ')}\n${infoHist}${advertencia}` }
