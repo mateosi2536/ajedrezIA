@@ -1882,7 +1882,7 @@
                     const res = await fetch(`${sideConf.ollamaUrl}/api/chat`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         signal: controller.signal,
-                        body: JSON.stringify({ model: sideConf.model, messages, stream: true })
+                        body: JSON.stringify({ model: sideConf.model, messages, stream: true, think: sideConf.thinking })
                     });
                     if (!res.ok) throw new Error(`Ollama Error ${res.status}`);
                     const reader = res.body.getReader();
@@ -1897,6 +1897,10 @@
                         for (const line of lines) {
                             if (!line.trim()) continue;
                             const json = JSON.parse(line);
+                            if (json.message?.thinking) {
+                                thinkContent += json.message.thinking;
+                                updateLiveUI(thinkContent, null, liveEntry);
+                            }
                             if (json.message?.content) {
                                 responseText += json.message.content;
                                 updateLiveUI(null, responseText, liveEntry);
